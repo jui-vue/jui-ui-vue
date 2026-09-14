@@ -6,3 +6,9 @@ node_modules/
 
 # Mac
 .DS_Store
+
+# Serena MCP project metadata
+.serena/
+
+# Vue package build output
+vue/dist/

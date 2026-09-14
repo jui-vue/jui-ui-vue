@@ -1,0 +1,171 @@
+<script setup>
+// 원본(splitter.js)은 CSS 클래스가 아니라 jQuery로 계산한 픽셀 값을 인라인 스타일로 직접
+// 밀어넣는 방식(position:absolute + left/top/width/height 전부 JS 계산)이라 전용 .less가
+// 없다. Vue 버전도 동일하게 인라인 스타일 바인딩으로 재현한다.
+// 원본은 정확히 두 개의 자식 셀렉터(items: [sel1, sel2])를 받는데, Vue 버전은 그 자리를
+// #first/#second 두 개의 named slot으로 대체한다(선택자 스캔 대신 슬롯 콘텐츠 프로젝션 —
+// Button/Tab items와 동일한 방향의 단순화).
+// 원본의 setHide(index)/setShow(index)/toggle(index)는 그대로 명령형 메서드로 노출하되,
+// 제어 컴포넌트로도 쓸 수 있게 hidden prop(v-model:hidden)도 함께 지원한다.
+// 이벤트명 'move.done'은 Vue 템플릿의 @move.done이 "done" modifier로 파싱되어 버리므로
+// 'resize'로 이름을 바꿨다(동작은 동일 — 드래그가 끝났을 때 1회 발생).
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue"
+
+const props = defineProps({
+    direction: { type: String, default: "vertical" }, // 'vertical' | 'horizontal'
+    initSize: { type: [String, Number], default: "50%" },
+    minSize: { type: [Number, Array], default: 30 },
+    barSize: { type: Number, default: 4 },
+    barStyle: {
+        type: Object,
+        default: () => ({ backgroundColor: "#f6f6f6", borderRight: "1px solid #e4e4e4" })
+    },
+    fixed: { type: Boolean, default: false },
+    hidden: { type: Number, default: null } // null | 0 | 1 — v-model:hidden
+})
+
+const emit = defineEmits(["update:hidden", "resize"])
+
+const rootEl = ref(null)
+const splitPx = ref(0)
+const dragging = ref(false)
+
+const isVertical = computed(() => props.direction === "vertical")
+const minSizePair = computed(() => (typeof props.minSize === "number" ? [props.minSize, props.minSize] : props.minSize))
+
+function containerSize() {
+    if (!rootEl.value) return 0
+    return isVertical.value ? rootEl.value.clientWidth : rootEl.value.clientHeight
+}
+
+function resolveSize(size, maxSize) {
+    if (typeof size === "string" && size.indexOf("%") > -1) {
+        return maxSize * (parseFloat(size.replace("%", "")) / 100)
+    }
+    return size
+}
+
+function clamp(pos, maxSize) {
+    const [minFirst, minSecond] = minSizePair.value
+    if (pos < props.barSize + minFirst) return props.barSize + minFirst
+    if (pos > maxSize - props.barSize - minSecond) return maxSize - props.barSize - minSecond
+    return pos
+}
+
+const userAdjusted = ref(false) // 사용자가 드래그로 직접 위치를 바꿨으면, 이후 컨테이너 크기가
+// 변해도(예: 조상 Splitter가 뒤늦게 자기 크기를 확정하는 경우) 자동 재계산으로 덮어쓰지 않는다.
+
+function recompute() {
+    if (props.hidden !== null || userAdjusted.value) return
+    const maxSize = containerSize()
+    if (maxSize <= 0) return
+    splitPx.value = clamp(resolveSize(props.initSize, maxSize), maxSize)
+}
+
+let observer = null
+onMounted(() => {
+    recompute()
+    // Border Layout 데모처럼 Splitter 슬롯 안에 또 Splitter가 중첩된 경우, 안쪽 Splitter는
+    // 바깥쪽 Splitter보다 먼저 mount되므로(Vue는 자식을 부모보다 먼저 mount한다) 처음 크기를
+    // 잴 때 조상이 아직 자기 폭을 확정하기 전일 수 있고, 그 이후에도 조상이 여러 단계를 거쳐
+    // 자기 크기를 확정하는 동안 컨테이너 크기가 몇 차례 더 바뀔 수 있다. 그래서 사용자가 직접
+    // 드래그하기 전까지는 컨테이너 크기 변화를 계속 관찰하며 퍼센트 기준으로 다시 계산한다.
+    if (typeof ResizeObserver !== "undefined") {
+        observer = new ResizeObserver(recompute)
+        observer.observe(rootEl.value)
+    }
+})
+onBeforeUnmount(() => observer?.disconnect())
+
+watch(() => [props.direction, props.initSize, props.minSize, props.barSize, props.hidden], recompute)
+
+const rootStyle = { position: "absolute", width: "100%", height: "100%", overflow: "hidden" }
+
+const panel1Style = computed(() => {
+    if (props.hidden === 0) return { display: "none" }
+    if (props.hidden === 1) return { position: "absolute", left: "0px", right: "0px", top: "0px", bottom: "0px" }
+    return isVertical.value
+        ? { position: "absolute", left: "0px", width: splitPx.value + "px", top: "0px", bottom: "0px" }
+        : { position: "absolute", top: "0px", height: splitPx.value + "px", left: "0px", right: "0px" }
+})
+
+const panel2Style = computed(() => {
+    if (props.hidden === 1) return { display: "none" }
+    if (props.hidden === 0) return { position: "absolute", left: "0px", right: "0px", top: "0px", bottom: "0px" }
+    return isVertical.value
+        ? { position: "absolute", left: splitPx.value + props.barSize + "px", right: "0px", top: "0px", bottom: "0px" }
+        : { position: "absolute", top: splitPx.value + props.barSize + "px", bottom: "0px", left: "0px", right: "0px" }
+})
+
+const showBar = computed(() => props.hidden === null)
+
+const barStyleComputed = computed(() => {
+    const base = isVertical.value
+        ? { position: "absolute", top: "0px", bottom: "0px", width: props.barSize + "px", left: splitPx.value + "px", cursor: "ew-resize" }
+        : { position: "absolute", left: "0px", right: "0px", height: props.barSize + "px", top: splitPx.value + "px", cursor: "ns-resize" }
+    return { ...base, ...props.barStyle }
+})
+
+let prevClient = 0
+function onBarMouseDown(e) {
+    if (props.fixed) return
+    dragging.value = true
+    userAdjusted.value = true
+    prevClient = isVertical.value ? e.clientX : e.clientY
+    rootEl.value.querySelectorAll("iframe").forEach((f) => (f.style.pointerEvents = "none"))
+    document.addEventListener("mousemove", onMouseMove)
+    document.addEventListener("mouseup", onMouseUp)
+}
+
+function onMouseMove(e) {
+    if (!dragging.value) return
+    const client = isVertical.value ? e.clientX : e.clientY
+    const dist = client - prevClient
+    const maxSize = containerSize()
+    splitPx.value = clamp(splitPx.value + dist, maxSize)
+    prevClient = client
+}
+
+function onMouseUp() {
+    if (!dragging.value) return
+    dragging.value = false
+    document.removeEventListener("mousemove", onMouseMove)
+    document.removeEventListener("mouseup", onMouseUp)
+    rootEl.value.querySelectorAll("iframe").forEach((f) => (f.style.pointerEvents = "auto"))
+    emit("resize", splitPx.value)
+}
+
+onBeforeUnmount(() => {
+    document.removeEventListener("mousemove", onMouseMove)
+    document.removeEventListener("mouseup", onMouseUp)
+})
+
+function setHide(index) {
+    emit("update:hidden", index)
+}
+function setShow(index) {
+    if (props.hidden === index) emit("update:hidden", null)
+}
+function toggle(index) {
+    emit("update:hidden", props.hidden === index ? null : index)
+}
+function setInitSize(size) {
+    userAdjusted.value = true
+    const maxSize = containerSize()
+    splitPx.value = clamp(resolveSize(size, maxSize), maxSize)
+}
+
+defineExpose({ setHide, setShow, toggle, setInitSize })
+</script>
+
+<template>
+    <div ref="rootEl" class="splitter" :style="rootStyle" :class="{ dragging }">
+        <div class="splitter-panel" :style="panel1Style">
+            <slot name="first" />
+        </div>
+        <div class="splitter-panel" :style="panel2Style">
+            <slot name="second" />
+        </div>
+        <div v-if="showBar" class="ui-splitter" :style="barStyleComputed" @mousedown="onBarMouseDown"></div>
+    </div>
+</template>
