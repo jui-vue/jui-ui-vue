@@ -82,7 +82,7 @@ function checkValid(value, isBlurEvent) {
     if (props.validJson) {
         try {
             JSON.parse(`{ "key":"${value}" }`)
-        } catch (e) {
+        } catch {
             if (isBlurEvent) emit("invalid", "json", value)
             return { valid: false, invalidType: "json" }
         }
@@ -152,10 +152,10 @@ function onBlur() {
 
 <template>
     <input
+        v-model="display"
         class="input"
         :class="[size, { invalid }]"
         type="text"
-        v-model="display"
         :placeholder="placeholder"
         @input="onInput"
         @focus="onFocus"

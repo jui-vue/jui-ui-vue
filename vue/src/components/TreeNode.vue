@@ -56,7 +56,7 @@ function onMouseOver(e) {
     <li :class="classes" :style="isRoot && hideRow ? { paddingLeft: '0px' } : null" @mousedown="ctx.drag ? onMouseDown($event) : null" @mouseup="ctx.drag ? onMouseUp($event) : null" @mouseover="ctx.drag ? onMouseOver($event) : null">
         <!-- rootHide: li 자체가 아니라(자식은 그대로 보여야 하므로) 루트 자신의 토글/라벨만 숨긴다 -->
         <i v-show="!hideRow" @click="onToggleClick"></i>
-        <component v-show="!hideRow" :is="node.data.href ? 'a' : 'div'" :href="node.data.href" @click="onSelectClick">
+        <component :is="node.data.href ? 'a' : 'div'" v-show="!hideRow" :href="node.data.href" @click="onSelectClick">
             <slot :node="{ index: node.index, data: node.data, depth: node.depth }">
                 <i></i>
                 {{ node.data.title }}

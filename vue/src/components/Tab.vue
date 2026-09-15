@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount, markRaw, nextTick } from "vue"
+import { ref, computed, watch, onMounted, onBeforeUnmount, markRaw, nextTick } from "vue"
 
 // 원본처럼 컴포넌트가 탭 목록을 직접 들고 있다가(localItems), 아래 defineExpose로
 // update/insert/append/prepend/remove/move/enable/disable/show/activeIndex 메서드를 제공한다.
@@ -92,8 +92,6 @@ watch(
     },
     { immediate: true }
 )
-
-const activeItem = computed(() => localItems.value[effectiveIndex.value])
 
 const suppressClick = ref(false)
 
@@ -191,7 +189,9 @@ function onDocumentClick(e) {
     }
 }
 
-document.addEventListener("click", onDocumentClick)
+// setup() 최상위에서 바로 document를 참조하면 SSR(예: Nuxt) 환경에서 document가 없어 크래시난다 —
+// onMounted 안에서만(브라우저에서만 실행됨을 보장) 등록한다.
+onMounted(() => document.addEventListener("click", onDocumentClick))
 onBeforeUnmount(() => document.removeEventListener("click", onDocumentClick))
 
 // --- 원본 API와 동일한 명령형 메서드들 (템플릿 ref로 받아서 호출) ---
@@ -268,7 +268,7 @@ defineExpose({ update, insert, append, prepend, remove, move, show, enable, disa
 </script>
 
 <template>
-    <div class="jui-tab" ref="tabRoot" @mouseup="onDragEnd">
+    <div ref="tabRoot" class="jui-tab" @mouseup="onDragEnd">
         <ul :class="[variant, position]" :style="{ order: position === 'bottom' ? 2 : 1 }">
             <li
                 v-for="(item, index) in localItems"
@@ -298,8 +298,8 @@ defineExpose({ update, insert, append, prepend, remove, move, show, enable, disa
         <div class="jui-tab-content" :style="{ order: position === 'bottom' ? 1 : 2 }">
             <div v-for="(item, idx) in localItems" v-show="idx === effectiveIndex" :key="item.value ?? idx">
                 <component
-                    v-if="typeof item.content === 'object' || typeof item.content === 'function'"
                     :is="item.content"
+                    v-if="typeof item.content === 'object' || typeof item.content === 'function'"
                     v-bind="item.contentProps"
                 />
                 <slot v-else :name="`panel-${item.value}`" :item="item" :index="idx" />

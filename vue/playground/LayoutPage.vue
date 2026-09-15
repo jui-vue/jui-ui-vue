@@ -19,12 +19,12 @@ const rightSize = ref(150)
 
     <div style="border: 1px solid #ccc; display: inline-block;">
         <Layout
-            :width="700"
-            :height="500"
             v-model:top-size="topSize"
             v-model:bottom-size="bottomSize"
             v-model:left-size="leftSize"
             v-model:right-size="rightSize"
+            :width="700"
+            :height="500"
         >
             <template #top>
                 <div style="background: #e8f0fe; height: 100%; padding: 10px; box-sizing: border-box;">Top</div>

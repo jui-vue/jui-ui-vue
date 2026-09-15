@@ -145,7 +145,7 @@ defineExpose({ show, hide, move: moveTo, setSize })
     </Teleport>
     <Teleport to="body">
         <div v-if="modelValue" ref="rootEl" class="window" :style="windowStyle" @mousedown="onFocus">
-            <div class="head" @mousedown="onHeadMouseDown" :style="{ cursor: canMove ? 'move' : 'default' }">
+            <div class="head" :style="{ cursor: canMove ? 'move' : 'default' }" @mousedown="onHeadMouseDown">
                 <div class="left">
                     <span class="title"><slot name="title">{{ title }}</slot></span>
                 </div>

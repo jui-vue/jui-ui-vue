@@ -2,7 +2,7 @@
   "name": "jui-ui-vue",
   "version": "0.0.1",
   "private": true,
-  "description": "jui-ui components rewritten as native Vue 3 components (pilot: Switch/Button/Tab)",
+  "description": "jui-ui component library rewritten as native Vue 3 components (all 24 components)",
   "type": "module",
   "main": "./dist/jui-ui-vue.umd.js",
   "module": "./dist/jui-ui-vue.es.js",
@@ -18,7 +18,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "eslint ."
   },
   "dependencies": {
     "vue": "^3.4.0"
@@ -26,6 +27,9 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",
     "@vue/test-utils": "^2.4.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-vue": "^9.33.0",
+    "globals": "^17.12.0",
     "jsdom": "^24.0.0",
     "less": "^3.13.1",
     "vite": "^5.2.0",

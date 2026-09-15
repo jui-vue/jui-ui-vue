@@ -80,7 +80,7 @@ function runCheck2SetValue() {
                 </tr>
                 <tr>
                     <td>
-                        <ButtonGroup :items="radio1Items" type="radio" size="small" v-model="radio1" />
+                        <ButtonGroup v-model="radio1" :items="radio1Items" type="radio" size="small" />
                     </td>
                     <td>
                         <button class="btn btn-gray" @click="runRadio1">Run</button>
@@ -90,7 +90,7 @@ function runCheck2SetValue() {
                 </tr>
                 <tr>
                     <td>
-                        <ButtonGroup :items="radio2Items" type="radio" size="mini" v-model="radio2" />
+                        <ButtonGroup v-model="radio2" :items="radio2Items" type="radio" size="mini" />
                     </td>
                     <td>
                         <button class="btn btn-gray" @click="runRadio2SetIndex">Run</button>
@@ -100,7 +100,7 @@ function runCheck2SetValue() {
                 </tr>
                 <tr>
                     <td>
-                        <ButtonGroup :items="radio3Items" type="radio" size="mini" v-model="radio3" />
+                        <ButtonGroup v-model="radio3" :items="radio3Items" type="radio" size="mini" />
                     </td>
                     <td>
                         <button class="btn btn-gray" @click="runRadio3SetValue">Run</button>
@@ -139,7 +139,7 @@ const radio1 = ref("true");</code></pre>
                 </tr>
                 <tr>
                     <td>
-                        <ButtonGroup :items="checkItems" type="check" size="mini" v-model="check1" />
+                        <ButtonGroup v-model="check1" :items="checkItems" type="check" size="mini" />
                     </td>
                     <td>
                         <button class="btn btn-gray" @click="runCheck1SetIndex">Run</button>
@@ -149,7 +149,7 @@ const radio1 = ref("true");</code></pre>
                 </tr>
                 <tr>
                     <td>
-                        <ButtonGroup :items="check2Items" type="check" size="mini" v-model="check2" />
+                        <ButtonGroup v-model="check2" :items="check2Items" type="check" size="mini" />
                     </td>
                     <td>
                         <button class="btn btn-gray" @click="runCheck2SetValue">Run</button>

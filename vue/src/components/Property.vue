@@ -197,7 +197,7 @@ const openDatePopup = ref(null) // 열려있는 date 편집기의 index
 function toggleDate(index) {
     openDatePopup.value = openDatePopup.value === index ? null : index
 }
-function onDateSelect(index, formatted, date) {
+function onDateSelect(index, formatted) {
     refreshValue(index, formatted)
     openDatePopup.value = null
 }
@@ -270,14 +270,20 @@ defineExpose({
                                 @input="onTextInput(index, $event)"
                             ></textarea>
 
+                            <!-- 'html' 타입은 원본(renderer.html)도 $input.html(item.value)로 동일하게 동작했다.
+                                 rich-text 편집기 자리라 HTML을 그대로 렌더링하는 게 기능 자체다 — items를
+                                 신뢰할 수 없는 소스(사용자 입력, 외부 API 등)로 채운다면 호출 측에서 반드시
+                                 sanitize한 값만 넘겨야 한다. -->
+                            <!-- eslint-disable vue/no-v-html -->
                             <div
                                 v-else-if="item.type === 'html'"
                                 class="html"
                                 :contenteditable="!item.readonly"
                                 :style="{ height: (item.height || 100) + 'px' }"
-                                v-html="item.value"
                                 @input="onHtmlInput(index, $event)"
+                                v-html="item.value"
                             ></div>
+                            <!-- eslint-enable vue/no-v-html -->
 
                             <input
                                 v-else-if="item.type === 'number'"
@@ -329,7 +335,7 @@ defineExpose({
                                     <Datepicker
                                         :title-format="item.titleFormat || 'yyyy. MM'"
                                         :format="item.format || 'yyyy/MM/dd'"
-                                        @select="(formatted, date) => onDateSelect(index, formatted, date)"
+                                        @select="(formatted) => onDateSelect(index, formatted)"
                                     />
                                 </div>
                             </div>
@@ -369,6 +375,9 @@ defineExpose({
                             </div>
                         </div>
 
+                        <!-- description도 원본이 HTML 그대로 삽입하던 필드다(링크 등을 넣는 용도) —
+                             items를 신뢰할 수 없는 소스로 채운다면 호출 측에서 sanitize 필요. -->
+                        <!-- eslint-disable-next-line vue/no-v-html -->
                         <div v-if="item.description" class="description" v-html="item.description"></div>
                     </div>
                 </template>

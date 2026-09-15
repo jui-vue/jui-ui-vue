@@ -44,26 +44,25 @@ const showClone = ref(false)
         <p>
             <a class="btn mini" href="javascript:void(0)" @click="showInner = true">Run</a> -
             전체 화면이 대상이 아닌 특정 태그 내부적으로도 모달 기능을 사용할 수 있는 기능을 제공합니다.
-
-            <!-- 이너 모달은 Teleport 없이 제자리에 position:absolute로 그려지므로, 대상과 같은
-                 position:relative 컨테이너 안에 Modal을 같이 둬야 한다(target 셀렉터 대신). -->
-            <div style="position: relative;">
-                <table id="modal_2" class="table table-classic table-stripeless" style="width: 700px;">
-                    <thead>
-                        <tr><th>No</th><th>Name</th><th>Age</th><th>Location</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td style="width: 164px;">0</td><td style="width: 164px;">Hong</td><td style="width: 164px;">20</td><td style="width: 153px;">Ilsan</td></tr>
-                        <tr><td>1</td><td>Jung</td><td>30</td><td>Seoul</td></tr>
-                        <tr><td>2</td><td>Park</td><td>15</td><td>Yeosu</td></tr>
-                    </tbody>
-                </table>
-
-                <Modal v-model="showInner" :fixed="false" :opacity="0.5" color="white">
-                    <div style="font-size: 20px; color: red;">NOW LOADING...</div>
-                </Modal>
-            </div>
         </p>
+        <!-- 이너 모달은 Teleport 없이 제자리에 position:absolute로 그려지므로, 대상과 같은
+             position:relative 컨테이너 안에 Modal을 같이 둬야 한다(target 셀렉터 대신). -->
+        <div style="position: relative;">
+            <table id="modal_2" class="table table-classic table-stripeless" style="width: 700px;">
+                <thead>
+                    <tr><th>No</th><th>Name</th><th>Age</th><th>Location</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td style="width: 164px;">0</td><td style="width: 164px;">Hong</td><td style="width: 164px;">20</td><td style="width: 153px;">Ilsan</td></tr>
+                    <tr><td>1</td><td>Jung</td><td>30</td><td>Seoul</td></tr>
+                    <tr><td>2</td><td>Park</td><td>15</td><td>Yeosu</td></tr>
+                </tbody>
+            </table>
+
+            <Modal v-model="showInner" :fixed="false" :opacity="0.5" color="white">
+                <div style="font-size: 20px; color: red;">NOW LOADING...</div>
+            </Modal>
+        </div>
 
         <p class="br">
 <pre><code class="language-javascript">&lt;div style="position: relative;"&gt;
@@ -84,32 +83,31 @@ const showClone = ref(false)
         <p>
             <a class="btn mini" href="javascript:void(0)" @click="showClone = true">Run</a> -
             전체 화면이 대상이 아닌 특정 태그 내부적으로도 모달 기능을 사용할 수 있는 기능을 제공합니다.
+        </p>
+        <div style="position: relative;">
+            <table id="modal_3" class="table classic stripeless" style="width: 500px;">
+                <thead>
+                    <tr><th>No</th><th>Name</th><th>Age</th><th>Location</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td style="width: 164px;">0</td><td style="width: 164px;">Hong</td><td style="width: 164px;">20</td><td style="width: 153px;">Ilsan</td></tr>
+                    <tr><td>1</td><td>Jung</td><td>30</td><td>Seoul</td></tr>
+                    <tr><td>2</td><td>Park</td><td>15</td><td>Yeosu</td></tr>
+                </tbody>
+            </table>
 
-            <div style="position: relative;">
-                <table id="modal_3" class="table classic stripeless" style="width: 500px;">
+            <Modal v-model="showClone" :fixed="false" :opacity="0.8">
+                <table class="table classic stripeless" style="width: 500px;">
                     <thead>
                         <tr><th>No</th><th>Name</th><th>Age</th><th>Location</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td style="width: 164px;">0</td><td style="width: 164px;">Hong</td><td style="width: 164px;">20</td><td style="width: 153px;">Ilsan</td></tr>
+                        <tr><td>0</td><td>Hong</td><td>20</td><td>Ilsan</td></tr>
                         <tr><td>1</td><td>Jung</td><td>30</td><td>Seoul</td></tr>
                         <tr><td>2</td><td>Park</td><td>15</td><td>Yeosu</td></tr>
                     </tbody>
                 </table>
-
-                <Modal v-model="showClone" :fixed="false" :opacity="0.8">
-                    <table class="table classic stripeless" style="width: 500px;">
-                        <thead>
-                            <tr><th>No</th><th>Name</th><th>Age</th><th>Location</th></tr>
-                        </thead>
-                        <tbody>
-                            <tr><td>0</td><td>Hong</td><td>20</td><td>Ilsan</td></tr>
-                            <tr><td>1</td><td>Jung</td><td>30</td><td>Seoul</td></tr>
-                            <tr><td>2</td><td>Park</td><td>15</td><td>Yeosu</td></tr>
-                        </tbody>
-                    </table>
-                </Modal>
-            </div>
-        </p>
+            </Modal>
+        </div>
     </section>
 </template>

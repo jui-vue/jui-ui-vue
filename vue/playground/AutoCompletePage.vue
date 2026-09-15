@@ -29,8 +29,8 @@ function runUpdate() {
         <p>
             아래 키워드 중에 입력한 문자가 포함되어 있으면, 드롭다운 메뉴에 키워드 목록이 나타납니다.&nbsp;
             <AutoComplete
-                class="group"
                 v-model="text1"
+                class="group"
                 :words="acWords"
                 show-all
                 :height="100"
@@ -48,7 +48,7 @@ function runUpdate() {
         <p>
             <a class="btn btn-gray btn-mini" href="javascript:void(0)" @click="runUpdate">Run</a> -
             좌측 버튼을 클릭하면 아래와 같은 단어 목록으로 변경합니다.&nbsp;
-            <AutoComplete class="group" ref="ac2Ref" v-model="text2" :words="acWords" input-style="width: 100px">
+            <AutoComplete ref="ac2Ref" v-model="text2" class="group" :words="acWords" input-style="width: 100px">
                 <template #prefix><label class="label small"><i class="icon-search"></i></label></template>
             </AutoComplete>
         </p>

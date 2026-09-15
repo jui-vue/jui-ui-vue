@@ -35,7 +35,7 @@ const complexItems = reactive([
     { type: "select", title: "Theme", key: "theme", value: "white", items: ["white", "black", "league"] }
 ])
 
-function onChange(item, newValue, oldValue) {
+function onChange(item, newValue, _oldValue) {
     console.log("item:", item)
     console.log("all items", newValue)
 }

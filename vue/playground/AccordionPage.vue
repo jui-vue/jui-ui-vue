@@ -64,7 +64,7 @@ function onInit5() {
     <div class="row">
         <div class="col col-3">
             <p>Classic, Normal</p>
-            <Accordion :items="items1" v-model="open1" @open="onOpen1">
+            <Accordion v-model="open1" :items="items1" @open="onOpen1">
                 <template v-for="item in items1" :key="item.value" #[`content-${item.value}`]>
                     <i class="icon-add-dir"></i> {{ item.text }}
                 </template>
@@ -74,7 +74,7 @@ function onInit5() {
 
         <div class="col col-3">
             <p>Classic, Large</p>
-            <Accordion :items="items2" v-model="open2" size="large" @open="onOpen2">
+            <Accordion v-model="open2" :items="items2" size="large" @open="onOpen2">
                 <template v-for="item in items2" :key="item.value" #[`content-${item.value}`]>
                     {{ item.text }}
                 </template>
@@ -84,7 +84,7 @@ function onInit5() {
 
         <div class="col col-3">
             <p>Simple, Normal</p>
-            <Accordion :items="items3" v-model="open3" variant="simple">
+            <Accordion v-model="open3" :items="items3" variant="simple">
                 <template v-for="item in items3" :key="item.value" #[`content-${item.value}`]>
                     {{ item.text }}
                 </template>
@@ -93,7 +93,7 @@ function onInit5() {
 
         <div class="col col-3">
             <p>Simple, Large</p>
-            <Accordion :items="items4" v-model="open4" variant="simple" size="large">
+            <Accordion v-model="open4" :items="items4" variant="simple" size="large">
                 <template v-for="item in items4" :key="item.value" #[`content-${item.value}`]>
                     {{ item.text }}
                 </template>
@@ -102,7 +102,7 @@ function onInit5() {
 
         <div class="col col-3">
             <p>Support Multi Panel</p>
-            <Accordion :items="items5" v-model="open5" multipanel @open="onOpen5" @fold="onFold5" @init="onInit5">
+            <Accordion v-model="open5" :items="items5" multipanel @open="onOpen5" @fold="onFold5" @init="onInit5">
                 <template v-for="item in items5" :key="item.value" #[`content-${item.value}`]>
                     {{ item.text }}
                 </template>

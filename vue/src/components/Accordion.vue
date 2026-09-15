@@ -88,10 +88,10 @@ defineExpose({ activeIndex })
                 {{ item.title }}
                 <slot name="icon" :index="index" :open="isOpen(index)" />
             </div>
-            <div class="content" v-show="isOpen(index)">
+            <div v-show="isOpen(index)" class="content">
                 <component
-                    v-if="typeof item.content === 'object' || typeof item.content === 'function'"
                     :is="item.content"
+                    v-if="typeof item.content === 'object' || typeof item.content === 'function'"
                     v-bind="item.contentProps"
                 />
                 <slot v-else :name="`content-${item.value ?? index}`" :item="item" :index="index" />

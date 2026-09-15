@@ -42,7 +42,7 @@ function onTab2ChangeMenu(data) {
 
     <div class="row">
         <div class="col col-6">
-            <Tab :items="tab1Items" v-model="tab1Index" position="top" @change="onTab1Change">
+            <Tab v-model="tab1Index" :items="tab1Items" position="top" @change="onTab1Change">
                 <template #panel-home><div>home</div></template>
                 <template #panel-css><div>css</div></template>
                 <template #panel-script><div>script</div></template>
@@ -50,8 +50,8 @@ function onTab2ChangeMenu(data) {
         </div>
         <div class="col col-6">
             <Tab
-                :items="tab2Items"
                 v-model="tab2Index"
+                :items="tab2Items"
                 variant="pill"
                 position="bottom"
                 :menu="tab2Menu"

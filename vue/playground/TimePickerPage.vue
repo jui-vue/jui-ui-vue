@@ -29,32 +29,32 @@ const time4 = ref({ hours: 0, minutes: 0 })
         <div class="col col-3">
             <p>Classic, Large</p>
             <div class="row">
-                <TimePicker mode="date" size="large" v-model="date1" />
-                <TimePicker mode="time" size="large" v-model="time1" />
+                <TimePicker v-model="date1" mode="date" size="large" />
+                <TimePicker v-model="time1" mode="time" size="large" />
             </div>
         </div>
 
         <div class="col col-3">
             <p>Classic, Normal</p>
             <div class="row">
-                <TimePicker mode="date" size="normal" v-model="date2" />
-                <TimePicker mode="time" size="normal" v-model="time2" />
+                <TimePicker v-model="date2" mode="date" size="normal" />
+                <TimePicker v-model="time2" mode="time" size="normal" />
             </div>
         </div>
 
         <div class="col col-3">
             <p>Classic, Small</p>
             <div class="row">
-                <TimePicker mode="date" size="small" v-model="date3" />
-                <TimePicker mode="time" size="small" v-model="time3" />
+                <TimePicker v-model="date3" mode="date" size="small" />
+                <TimePicker v-model="time3" mode="time" size="small" />
             </div>
         </div>
 
         <div class="col col-3">
             <p>Classic, Mini</p>
             <div class="row">
-                <TimePicker mode="date" size="mini" v-model="date4" />
-                <TimePicker mode="time" size="mini" v-model="time4" />
+                <TimePicker v-model="date4" mode="date" size="mini" />
+                <TimePicker v-model="time4" mode="time" size="mini" />
             </div>
         </div>
     </div>

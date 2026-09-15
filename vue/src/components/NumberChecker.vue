@@ -114,10 +114,10 @@ function onBlur() {
 
 <template>
     <input
+        v-model="display"
         class="input"
         :class="[size, { invalid }]"
         type="text"
-        v-model="display"
         :placeholder="placeholder"
         @input="onInput"
         @focus="onFocus"

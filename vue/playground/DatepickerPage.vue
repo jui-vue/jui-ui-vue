@@ -1,5 +1,4 @@
 <script setup>
-import { ref } from "vue"
 import Datepicker from "../src/components/Datepicker.vue"
 
 function onSelect(date) {
@@ -17,9 +16,8 @@ const fiveDaysLater = new Date(new Date().setDate(new Date().getDate() + 5))
 
     <section>
         <h2>Type</h2>
-        <p>
-            <strong>type</strong> 옵션에 따라 아래의 세 종류의 datepicker을 이용할 수 있습니다. (<strong>daily</strong>이 기본값으로 설정되어 있습니다.)
-
+        <p><strong>type</strong> 옵션에 따라 아래의 세 종류의 datepicker을 이용할 수 있습니다. (<strong>daily</strong>이 기본값으로 설정되어 있습니다.)</p>
+        <div>
             <div style="display: inline-block; position: relative;">
                 <h3>Daily (Default)</h3>
                 <Datepicker title-format="yyyy MM" format="yyyy/MM/dd" move-year @select="onSelect" />
@@ -34,14 +32,13 @@ const fiveDaysLater = new Date(new Date().setDate(new Date().getDate() + 5))
                 <h3>Yearly</h3>
                 <Datepicker type="yearly" size="large" title-format="yyyy" format="yyyy" @select="onSelect" />
             </div>
-        </p>
+        </div>
     </section>
 
     <section>
         <h2>Set the date range</h2>
-        <p>
-            <strong>minDate</strong>와 <strong>maxDate</strong> prop을 설정하여, 선택할 수 있는 날짜를 제한할 수 있습니다.
-
+        <p><strong>minDate</strong>와 <strong>maxDate</strong> prop을 설정하여, 선택할 수 있는 날짜를 제한할 수 있습니다.</p>
+        <div>
             <div style="display: inline-block; position: relative;">
                 <Datepicker
                     title-format="yyyy MM"
@@ -51,14 +48,13 @@ const fiveDaysLater = new Date(new Date().setDate(new Date().getDate() + 5))
                     @select="onSelect"
                 />
             </div>
-        </p>
+        </div>
     </section>
 
     <section>
         <h2>Custom cell (#cell slot)</h2>
-        <p>
-            원본의 tpl.date 템플릿(주말 색상 강조)은 #cell scoped slot으로 대체했습니다.
-
+        <p>원본의 tpl.date 템플릿(주말 색상 강조)은 #cell scoped slot으로 대체했습니다.</p>
+        <div>
             <div style="display: inline-block; position: relative;">
                 <Datepicker title-format="yyyy. MM" format="yyyy-MM-dd" @select="onSelect">
                     <template #cell="{ type, no, day }">
@@ -66,6 +62,6 @@ const fiveDaysLater = new Date(new Date().setDate(new Date().getDate() + 5))
                     </template>
                 </Datepicker>
             </div>
-        </p>
+        </div>
     </section>
 </template>

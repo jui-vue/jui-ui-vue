@@ -130,6 +130,9 @@ defineExpose({ getValue, setValue: setValueApi, setSelectedIndex, getSelectedInd
             <span class="title-content">
                 <template v-if="selectedItems.length">
                     <span v-for="it in selectedItems" :key="it.value" class="item-view">
+                        <!-- 원본도 item.html이 있으면 그대로 .html()로 삽입했다(뱃지/아이콘 등을 넣는 용도)
+                             — items를 신뢰할 수 없는 소스로 채운다면 호출 측에서 sanitize된 HTML만 넘겨야 한다. -->
+                        <!-- eslint-disable-next-line vue/no-v-html -->
                         <span v-if="it.html != null" v-html="callOrValue(it.html, it)"></span>
                         <template v-else>{{ callOrValue(it.text, it) }}</template>
                     </span>
@@ -149,6 +152,7 @@ defineExpose({ getValue, setValue: setValueApi, setSelectedIndex, getSelectedInd
                     :value="it.value"
                     @click="onItemClick(it)"
                 >
+                    <!-- eslint-disable-next-line vue/no-v-html -- 위와 동일한 이유(원본과 동일 동작) -->
                     <span v-if="it.html != null" v-html="callOrValue(it.html, it)"></span>
                     <template v-else>{{ callOrValue(it.text, it) }}</template>
                 </div>
