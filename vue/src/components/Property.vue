@@ -220,6 +220,16 @@ function clearColor(index) {
     refreshValue(index, "")
 }
 
+// 원본 getDefaultValue() — 현재 값이 아니라 props.items에 처음 주어진 초기값 스냅샷을
+// 돌려준다(예: "변경사항이 있는지" 비교, "기본값으로 되돌리기" 용도).
+function getDefaultValue() {
+    const result = {}
+    props.items.forEach((it) => {
+        if (it.type !== "group" && it.value !== undefined) result[it.key] = it.value
+    })
+    return result
+}
+
 defineExpose({
     loadItems,
     addItem,
@@ -229,6 +239,7 @@ defineExpose({
     expanded,
     getValue,
     getAllValue,
+    getDefaultValue,
     setValue,
     initValue,
     updateValue,

@@ -30,6 +30,21 @@ function toggle() {
     emit("update:modelValue", next)
     emit("change", next)
 }
+
+// 원본의 getValue/setValue/toggle을 ref로 직접 호출할 수 있도록 노출한다.
+// (v-model만으로 충분한 경우가 대부분이지만, 원본처럼 외부 트리거에서 명령형으로
+// 제어하고 싶을 때를 위한 API — setValue(true/false)는 toggle과 달리 값을 직접 지정한다)
+function getValue() {
+    return props.modelValue
+}
+
+function setValue(value) {
+    const next = !!value
+    emit("update:modelValue", next)
+    emit("change", next)
+}
+
+defineExpose({ getValue, setValue, toggle })
 </script>
 
 <template>

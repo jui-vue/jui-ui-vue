@@ -79,6 +79,42 @@ function onClick(item, e) {
     emit("change", { item, value: nextValue }, e)
     emit("click", { item, value: nextValue }, e)
 }
+
+// 원본(button.js)의 setValue/setIndex/getValue/getData 대응 — v-model 밖에서
+// ref로 직접 그룹을 제어하고 싶을 때 쓰는 명령형 API.
+function setValueInternal(value) {
+    internalValue.value = value
+    emit("update:modelValue", value)
+    emit("change", { item: undefined, value }, undefined)
+}
+
+function setValue(value) {
+    setValueInternal(value)
+}
+
+function setIndex(indexList) {
+    if (props.type === "check") {
+        const list = Array.isArray(indexList) ? indexList : [indexList]
+        setValueInternal(list.map(indexToValue).filter((v) => v !== undefined))
+    } else {
+        setValueInternal(indexToValue(indexList))
+    }
+}
+
+function getValue() {
+    return currentValue.value
+}
+
+function getData() {
+    if (props.type === "check") {
+        return (Array.isArray(currentValue.value) ? currentValue.value : []).map((v) =>
+            props.items.find((it) => it.value === v)
+        )
+    }
+    return props.items.find((it) => it.value === currentValue.value)
+}
+
+defineExpose({ setValue, setIndex, getValue, getData })
 </script>
 
 <template>
