@@ -10,7 +10,8 @@
     ".": {
       "import": "./dist/jui-ui-vue.es.js",
       "require": "./dist/jui-ui-vue.umd.js"
-    }
+    },
+    "./style.css": "./dist/style.css"
   },
   "files": [
     "dist"
