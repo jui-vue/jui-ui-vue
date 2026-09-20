@@ -8,12 +8,12 @@
   "author": "search5",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jui-vue/jui-ui-vue.git",
+    "url": "git+https://github.com/juijs-vue/jui-ui-vue.git",
     "directory": "vue"
   },
-  "homepage": "https://github.com/jui-vue/jui-ui-vue/tree/master/vue#readme",
+  "homepage": "https://github.com/juijs-vue/jui-ui-vue/tree/master/vue#readme",
   "bugs": {
-    "url": "https://github.com/jui-vue/jui-ui-vue/issues"
+    "url": "https://github.com/juijs-vue/jui-ui-vue/issues"
   },
   "keywords": [
     "vue",

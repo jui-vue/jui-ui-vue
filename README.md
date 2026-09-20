@@ -38,7 +38,7 @@ Colorpicker, Slider, Layout, Datepicker, Property, Tree.
 
 ## Development
 
-This package lives at `vue/` inside the [jui-ui-vue](https://github.com/jui-vue/jui-ui-vue)
+This package lives at `vue/` inside the [jui-ui-vue](https://github.com/juijs-vue/jui-ui-vue)
 repo, alongside the original jQuery-based `jui-ui` source it was ported from.
 
 ```bash
