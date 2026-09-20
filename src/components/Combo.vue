@@ -201,6 +201,10 @@ onMounted(async () => {
     }
     if (props.width > 0) {
         await nextTick()
+        // 아이콘 폰트(icomoon 등)가 비동기로 로드되는 동안에는 toggle 버튼의 아이콘이 폴백
+        // 글리프로 그려져서 offsetWidth가 최종 값보다 작게 측정될 수 있다 - 폰트가 실제로
+        // 준비된 뒤 재보정한다.
+        if (document.fonts?.ready) await document.fonts.ready
         // 원본: $combo_text.outerWidth(opts.width - $combo_toggle.outerWidth() + 1)
         textWidth.value = props.width - (toggleEl.value ? toggleEl.value.offsetWidth : 0) + 1
     }
@@ -219,10 +223,13 @@ defineExpose({ setIndex, setValue, getData, getValue, getText, open, fold })
 
 <template>
     <div ref="rootEl" class="combo" :class="{ open: isOpen }" @click.stop>
+        <!-- 텍스트 버튼/ul/토글 버튼을 같은 줄에서 공백 하나로 이어붙인다 - .combo가 쓰는
+             .children-group()의 -7px 형제 마진은 원본의 줄바꿈 마크업이 만드는 공백 렌더링을
+             전제로 튜닝된 값이라, Vue가 그 공백을 지워버리면 (ButtonGroup/AutoComplete와 같은
+             이유로) 텍스트 버튼과 토글 버튼이 프로덕션보다 몇 px 더 겹친다. -->
         <a class="btn" :class="{ small: size === 'small' }" :style="computedTextStyle" @click="toggle">
             {{ selectedItem ? selectedItem.text : "Select..." }}
-        </a>
-        <ul ref="dropEl" :style="dropStyle">
+        </a> <ul ref="dropEl" :style="dropStyle">
             <li
                 v-for="(item, i) in items"
                 :key="i"
@@ -233,8 +240,7 @@ defineExpose({ setIndex, setValue, getData, getValue, getText, open, fold })
                 <a v-if="item.href !== undefined" :href="item.href">{{ item.text }}</a>
                 <template v-else>{{ item.text }}</template>
             </li>
-        </ul>
-        <a ref="toggleEl" class="btn toggle" :class="{ active: isOpen, small: size === 'small' }" @click="toggle">
+        </ul> <a ref="toggleEl" class="btn toggle" :class="{ active: isOpen, small: size === 'small' }" @click="toggle">
             <i class="icon-arrow2"></i>
         </a>
     </div>

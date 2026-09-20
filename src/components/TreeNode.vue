@@ -53,19 +53,6 @@ function onMouseOver(e) {
 </script>
 
 <template>
-    <li :class="classes" :style="isRoot && hideRow ? { paddingLeft: '0px' } : null" @mousedown="ctx.drag ? onMouseDown($event) : null" @mouseup="ctx.drag ? onMouseUp($event) : null" @mouseover="ctx.drag ? onMouseOver($event) : null">
-        <!-- rootHide: li 자체가 아니라(자식은 그대로 보여야 하므로) 루트 자신의 토글/라벨만 숨긴다 -->
-        <i v-show="!hideRow" @click="onToggleClick"></i>
-        <component :is="node.data.href ? 'a' : 'div'" v-show="!hideRow" :href="node.data.href" @click="onSelectClick">
-            <slot :node="{ index: node.index, data: node.data, depth: node.depth }">
-                <i></i>
-                {{ node.data.title }}
-            </slot>
-        </component>
-        <ul v-show="node.type === 'open'">
-            <TreeNode v-for="child in node.children" :key="child.index" :node="child">
-                <template #default="slotProps"><slot v-bind="slotProps" /></template>
-            </TreeNode>
-        </ul>
+    <li :class="classes" :style="isRoot && hideRow ? { paddingLeft: '0px' } : null" @mousedown="ctx.drag ? onMouseDown($event) : null" @mouseup="ctx.drag ? onMouseUp($event) : null" @mouseover="ctx.drag ? onMouseOver($event) : null"><i v-show="!hideRow" @click="onToggleClick"></i> <component :is="node.data.href ? 'a' : 'div'" v-show="!hideRow" :href="node.data.href" @click="onSelectClick"><slot :node="{ index: node.index, data: node.data, depth: node.depth }"><i></i> {{ node.data.title }}</slot></component> <ul v-show="node.type === 'open'"><TreeNode v-for="child in node.children" :key="child.index" :node="child"><template #default="slotProps"><slot v-bind="slotProps" /></template></TreeNode></ul>
     </li>
 </template>

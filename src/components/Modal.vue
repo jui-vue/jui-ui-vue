@@ -83,7 +83,7 @@ defineExpose({ show, hide })
                 :style="{ zIndex: 5001 + index }"
                 @click="onBackdropClick"
             >
-                <div style="pointer-events: auto;" @click.stop>
+                <div class="modal-inner" style="pointer-events: auto;" @click.stop>
                     <slot :hide="hide" />
                 </div>
             </div>
@@ -102,9 +102,23 @@ defineExpose({ show, hide })
             :style="{ zIndex: 5001 + index }"
             @click="onBackdropClick"
         >
-            <div style="pointer-events: auto;" @click.stop>
+            <div class="modal-inner" style="pointer-events: auto;" @click.stop>
                 <slot :hide="hide" />
             </div>
         </div>
     </div>
 </template>
+
+<style>
+/* flex의 align-items/justify-content 중앙정렬은 position:absolute인 자식에는 적용되지
+   않는다 - .msgbox 등(msgbox.less)은 자기 자신을 position:absolute로 두는 CSS를 갖고 있어서
+   (원래는 JS로 계산한 left/top과 함께 쓰이는 것을 전제) 이 안에 슬롯으로 들어오면 중앙정렬이
+   깨진다. 이 래퍼 안에서는 relative로 되돌려서 flex 중앙정렬이 그대로 먹히게 한다.
+   !important가 필요한 이유: theme.less가 `.jui { ... .msgbox { position: absolute } }`로
+   같은 명시도(0,2,0)의 규칙을 다시 선언하고 있어서, 소스 순서상 테마 레이어가 이 규칙보다
+   나중에 번들되면 그냥은 이긴다. */
+.modal-inner > .msgbox,
+.modal-inner > .window {
+    position: relative !important;
+}
+</style>

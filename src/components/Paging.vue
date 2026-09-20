@@ -111,14 +111,16 @@ defineExpose({ page, next, prev, first, last, reload })
     <div class="paging" :class="size">
         <a class="prev" href="javascript:void(0)" @click="prev"></a>
         <div class="list">
-            <a
-                v-for="p in pages"
-                :key="p"
-                class="page"
-                :class="{ active: p === currentPage }"
-                href="javascript:void(0)"
-                @click="setPage(p, true)"
-            >{{ p }}</a>
+            <template v-for="(p, idx) in pages" :key="p">
+                <!-- v-for가 반복하는 노드 사이에는 자연스러운 공백 텍스트 노드가 없다(ButtonGroup.vue와
+                     같은 이유) - 원본의 줄바꿈 마크업이 만드는 공백을 보간된 텍스트로 재현한다. -->
+                {{ idx > 0 ? " " : "" }}<a
+                    class="page"
+                    :class="{ active: p === currentPage }"
+                    href="javascript:void(0)"
+                    @click="setPage(p, true)"
+                >{{ p }}</a>
+            </template>
         </div>
         <a class="next" href="javascript:void(0)" @click="next"></a>
     </div>

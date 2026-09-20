@@ -41,6 +41,14 @@ const props = defineProps({
         // 주어지면 탭 목록 끝에 "Menu" 항목이 추가된다.
         type: Array,
         default: undefined
+    },
+    contentStyle: {
+        // 원본 데모들은 탭 목록(#tab_N)과 콘텐츠 영역(#tab_contents_N)이 별개의 최상위
+        // 엘리먼트라 콘텐츠 쪽에만 배경 등을 따로 줄 수 있었다(예: background:#dcdcdc).
+        // 이 컴포넌트는 콘텐츠를 내부의 .jui-tab-content래퍼로 감싸므로, 그 스타일을
+        // 바깥에서 지정할 수 있게 prop으로 노출한다.
+        type: [String, Object, Array],
+        default: undefined
     }
 })
 
@@ -295,7 +303,7 @@ defineExpose({ update, insert, append, prepend, remove, move, show, enable, disa
                 </div>
             </li>
         </ul>
-        <div class="jui-tab-content" :style="{ order: position === 'bottom' ? 1 : 2 }">
+        <div class="jui-tab-content" :style="[{ order: position === 'bottom' ? 1 : 2 }, contentStyle]">
             <div v-for="(item, idx) in localItems" v-show="idx === effectiveIndex" :key="item.value ?? idx">
                 <component
                     :is="item.content"

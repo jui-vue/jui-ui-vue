@@ -135,6 +135,7 @@ const rows = computed(() => {
 })
 
 const title = computed(() => {
+    if (props.type === "yearly") return ""
     let d
     if (props.type === "daily") {
         const mm = viewMonth.value < 10 ? "0" + viewMonth.value : String(viewMonth.value)
@@ -285,27 +286,25 @@ defineExpose({ page, prev, next, select, addTime, getDate, getTime, getFormat, r
 </script>
 
 <template>
-    <div :class="[variant, size]">
+    <div :class="{ [variant]: true, [size]: size !== 'normal' }">
         <div class="head" :class="{ 'move-year': moveYear }">
             <div v-if="moveYear" class="prev-year" @click="prev(true)">&laquo;</div>
-            <div class="prev" @click="prev(false)"><i class="icon-chevron-left"></i></div>
+            <div class="prev" @click="prev(false)"><i v-if="variant === 'datepicker'" class="icon-chevron-left"></i></div>
             <div class="title">{{ title }}</div>
-            <div class="next" @click="next(false)"><i class="icon-chevron-right"></i></div>
+            <div class="next" @click="next(false)"><i v-if="variant === 'datepicker'" class="icon-chevron-right"></i></div>
             <div v-if="moveYear" class="next-year" @click="next(true)">&raquo;</div>
         </div>
         <table class="body">
-            <thead v-if="type === 'daily'">
-                <tr>
-                    <th>S</th>
-                    <th>M</th>
-                    <th>T</th>
-                    <th>W</th>
-                    <th>T</th>
-                    <th>F</th>
-                    <th>S</th>
-                </tr>
-            </thead>
             <tbody>
+                <tr v-if="type === 'daily'" :key="-1">
+                    <th>{{ variant === 'calendar' ? 'SUN' : 'SU' }}</th>
+                    <th>{{ variant === 'calendar' ? 'MON' : 'MO' }}</th>
+                    <th>{{ variant === 'calendar' ? 'TUE' : 'TU' }}</th>
+                    <th>{{ variant === 'calendar' ? 'WED' : 'WE' }}</th>
+                    <th>{{ variant === 'calendar' ? 'THU' : 'TH' }}</th>
+                    <th>{{ variant === 'calendar' ? 'FRI' : 'FR' }}</th>
+                    <th>{{ variant === 'calendar' ? 'SAT' : 'SA' }}</th>
+                </tr>
                 <tr v-for="(row, ri) in rows" :key="ri">
                     <td v-for="(cell, ci) in row" :key="ci" :class="cell.type" @click="selectCell(cell)">
                         <slot name="cell" :type="cell.type" :no="cell.no" :day="ci">{{ cell.no }}</slot>

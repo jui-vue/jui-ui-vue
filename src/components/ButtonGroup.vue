@@ -61,6 +61,12 @@ function isActive(item) {
 }
 
 function onClick(item, e) {
+    // 원본(button.js)도 핸들러 끝에서 e.preventDefault()를 호출한다 - 그대로 맞춰준다.
+    // (참고: <a>에 href가 없어서 원래도 클릭으로 실제 포커스가 가지 않는다 - 포커스 링이 옆
+    // 버튼에 가려 보이는 버그는 href="javascript:void(0)"를 붙였던 게 원인이었다. 원본처럼
+    // href 없이 .btn의 cursor:pointer만으로 충분하다.)
+    e.preventDefault()
+
     if (props.disabled || item.disabled) return
 
     let nextValue
@@ -119,14 +125,18 @@ defineExpose({ setValue, setIndex, getValue, getData })
 
 <template>
     <div class="group">
-        <a
-            v-for="item in items"
-            :key="item.value"
-            class="btn"
-            :class="[size, { active: isActive(item), disabled: disabled || item.disabled }]"
-            :value="item.value"
-            href="javascript:void(0)"
-            @click="onClick(item, $event)"
-        ><i v-if="item.icon" :class="[`icon-${item.icon}`, item.iconExtra]"></i>{{ item.icon && item.text ? " " : "" }}{{ item.text || "" }}</a>
+        <template v-for="(item, idx) in items" :key="item.value">
+            <!-- reproduces the whitespace-node gap raw HTML has between hand-written sibling tags
+                 (v-for repeats a single node with no natural gap the way newline-separated markup
+                 does), which .group's -7px sibling margin (common.less .children-group) assumes -
+                 an interpolated text node isn't subject to the compiler's static-whitespace
+                 stripping, so this renders as a real space between items, never before the first -->
+            {{ idx > 0 ? " " : "" }}<a
+                class="btn"
+                :class="[size, { active: isActive(item), disabled: disabled || item.disabled }]"
+                :value="item.value"
+                @click="onClick(item, $event)"
+            ><i v-if="item.icon" :class="[`icon-${item.icon}`, item.iconExtra]"></i>{{ item.icon && item.text ? " " : "" }}{{ item.text || "" }}</a>
+        </template>
     </div>
 </template>

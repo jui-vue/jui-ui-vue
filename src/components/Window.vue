@@ -33,7 +33,17 @@ const canResize = computed(() => props.resize && !props.modal)
 // 하므로, 모달이 아닐 때의 layerIndex 체계와 분리해서 계산한다.
 const zIndex = ref(props.modal ? 5001 + props.modalIndex : props.layerIndex)
 const size = ref({ width: props.width, height: props.height })
-const pos = ref({ left: props.left, top: props.top, right: props.right, bottom: props.bottom })
+
+// 원본(window.js)은 modal:true일 때 내부적으로 ui.modal의 센터링 계산에 left/top을 맡긴다
+// (modal.js: x = (뷰포트폭/2 - 창폭/2), y = (뷰포트높이/2 - 창높이/2)) — 그래서 modal:true인
+// 창은 left/top을 안 줘도 화면 중앙에 뜬다. 여기서도 modal이고 left/top이 명시되지 않았으면
+// (기본값 "auto") 같은 계산으로 초기 위치를 잡는다.
+const initialPos = { left: props.left, top: props.top, right: props.right, bottom: props.bottom }
+if (props.modal && props.left === "auto" && props.top === "auto") {
+    initialPos.left = Math.max(0, (window.innerWidth - props.width) / 2)
+    initialPos.top = Math.max(0, (window.innerHeight - props.height) / 2)
+}
+const pos = ref(initialPos)
 
 // window.less의 head(32px)/foot(47px) 고정 높이를 그대로 상수로 사용 — 원본은
 // $foot.outerHeight() 등으로 런타임에 측정했지만, 이 컴포넌트의 head/foot은 항상
@@ -150,7 +160,8 @@ defineExpose({ show, hide, move: moveTo, setSize })
                     <span class="title"><slot name="title">{{ title }}</slot></span>
                 </div>
                 <div class="right">
-                    <a class="close" @mousedown.stop @click="hide"><i class="icon-close"></i></a>
+                    <slot name="actions" :hide="hide" />
+                    <a class="close" @mousedown.stop @click="hide"><i class="icon-exit"></i></a>
                 </div>
             </div>
             <div class="body" :style="bodyStyle">

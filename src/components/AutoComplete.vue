@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, onBeforeUnmount } from "vue"
+import { ref, computed, watch, onBeforeUnmount, nextTick } from "vue"
 
 // 원본(autocomplete.js)은 ui.dropdown(키보드 내비게이션 + body에 append하는 절대좌표 포지셔닝)에
 // 의존했다. Vue 버전은 Tab의 오버플로우 메뉴와 같은 방식으로 — 루트를 position:relative로 두고
@@ -30,6 +30,13 @@ const props = defineProps({
         // input 자체에 줄 style(너비 등) — style/class는 기본적으로 루트(.ac)에 붙기 때문에 별도로 받는다
         type: [String, Object, Array],
         default: undefined
+    },
+    size: {
+        // input.less의 .input.<size> 높이 변형과 맞춤 — 원본은 prefix 아이콘(label.small 등)과
+        // 같은 사이즈를 input에도 줘서 높이를 맞췄는데, 이 prop이 없어서 input이 항상
+        // .input.normal(28px)로 렌더링되고 label.small(24px) 프리픽스와 높이가 어긋났었다.
+        type: String,
+        default: "normal" // 'mini' | 'small' | 'normal' | 'large'
     }
 })
 
@@ -39,6 +46,17 @@ const localWords = ref(props.words.slice())
 const open = ref(false)
 const highlighted = ref(-1)
 let blurTimer = null
+
+// 원본은 드롭다운 생성 시 width: $(self.root).outerWidth()로 폭을 맞췄다(dropdown이 body에
+// append되어 레이아웃 흐름 밖에 있었기 때문). 여기서도 열릴 때마다 루트(.ac) 폭을 재서 맞춘다 —
+// 안 하면 ul이 float:left라 내용물(가장 긴 단어) 폭으로만 줄어든다.
+const rootRef = ref(null)
+const dropdownWidth = ref(null)
+watch(open, async (v) => {
+    if (!v) return
+    await nextTick()
+    if (rootRef.value) dropdownWidth.value = rootRef.value.offsetWidth
+})
 
 // 입력 중인 텍스트는 내부 상태를 원본으로 삼는다(ButtonGroup과 동일한 이유) — modelValue prop만
 // 보고 있으면 부모가 v-model로 즉시 되돌려주지 않는 한(또는 테스트에서 prop을 안 갱신하면)
@@ -136,10 +154,12 @@ defineExpose({ update, close, list })
 </script>
 
 <template>
-    <div class="ac" style="position: relative; display: inline-block;">
-        <slot name="prefix" />
-        <input
-            class="input"
+    <div ref="rootRef" class="ac" style="position: relative; display: inline-block;">
+        <!-- the literal space (kept on one line so Vue's compiler doesn't strip it) reproduces
+             the whitespace-node gap the legacy raw-HTML markup had here, which .group's -7px
+             sibling margin (common.less .children-group) was tuned against -->
+        <slot name="prefix" /> <input
+            :class="['input', size]"
             type="text"
             :style="inputStyle"
             :value="internalValue"
@@ -152,10 +172,10 @@ defineExpose({ update, close, list })
         <div
             v-if="open && visibleList.length > 0"
             class="dropdown"
-            style="display: block; left: 0; top: 100%;"
+            style="display: block; left: 0; top: 100%; margin-left: 0;"
             :style="height !== 'auto' ? { maxHeight: `${height}px`, overflowY: 'auto' } : {}"
         >
-            <ul style="position: static;">
+            <ul :style="{ position: 'static', width: dropdownWidth ? dropdownWidth + 'px' : undefined }">
                 <li
                     v-for="(w, i) in visibleList"
                     :key="w"
