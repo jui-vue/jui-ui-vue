@@ -4,6 +4,24 @@
   "private": true,
   "description": "jui-ui component library rewritten as native Vue 3 components (all 24 components)",
   "type": "module",
+  "license": "MIT",
+  "author": "search5",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jui-vue/jui-ui-vue.git",
+    "directory": "vue"
+  },
+  "homepage": "https://github.com/jui-vue/jui-ui-vue/tree/master/vue#readme",
+  "bugs": {
+    "url": "https://github.com/jui-vue/jui-ui-vue/issues"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "ui",
+    "components",
+    "component-library"
+  ],
   "main": "./dist/jui-ui-vue.umd.js",
   "module": "./dist/jui-ui-vue.es.js",
   "exports": {
