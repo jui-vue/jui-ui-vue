@@ -1,95 +1,58 @@
 {
-  "name": "juijs-ui",
-  "version": "2.3.6",
-  "sideEffects": false,
-  "description": "JUI provide all kinds of UI components that are used in web pages. However, charts and grids are not included.",
-  "scripts": {
-    "start": "npm run dev",
-    "dev": "webpack-dev-server --env=dev",
-    "dist": "webpack --env=prod",
-    "dist:classic": "webpack --env=prod",
-    "dist:dark": "webpack --env=prod",
-    "test": "jest --config ./jest.config.js"
-  },
-  "main": "src/main.js",
-  "files": [
-    "bundles",
-    "dist",
-    "examples",
-    "images",
-    "src",
-    "package.json",
-    "README.md",
-    "webpack.config.js",
-    "webpack.dev.js",
-    "webpack.prod.js",
-    ".babelrc",
-    ".gitignore"
-  ],
+  "name": "jui-ui-vue",
+  "version": "0.0.1",
+  "private": true,
+  "description": "jui-ui component library rewritten as native Vue 3 components (all 24 components)",
+  "type": "module",
+  "license": "MIT",
+  "author": "search5",
   "repository": {
     "type": "git",
-    "url": "https://github.com/juijs/jui-ui.git"
+    "url": "git+https://github.com/jui-vue/jui-ui-vue.git",
+    "directory": "vue"
+  },
+  "homepage": "https://github.com/jui-vue/jui-ui-vue/tree/master/vue#readme",
+  "bugs": {
+    "url": "https://github.com/jui-vue/jui-ui-vue/issues"
   },
   "keywords": [
-    "HTML5",
-    "CSS",
-    "JS",
-    "JavaScript",
-    "SVG",
-    "Grid",
-    "Framework",
-    "bootstrap",
-    "Web Development",
-    "free",
-    "MIT"
+    "vue",
+    "vue3",
+    "ui",
+    "components",
+    "component-library"
   ],
-  "author": "seogi1004",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/juijs/jui-grid/issues"
-  },
-  "categories": [
-    "Frameworks",
-    "UI"
-  ],
-  "maintainers": [
-    {
-      "name": "Alvin",
-      "email": "alvin@jennifersoft.com"
-    }
-  ],
-  "contributors": [
-    {
-      "name": "Jayden",
-      "email": "jayden@jennifersoft.com"
+  "main": "./dist/jui-ui-vue.umd.js",
+  "module": "./dist/jui-ui-vue.es.js",
+  "exports": {
+    ".": {
+      "import": "./dist/jui-ui-vue.es.js",
+      "require": "./dist/jui-ui-vue.umd.js"
     },
-    {
-      "name": "Yoha",
-      "email": "yoha@jennifersoft.com"
-    }
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
   ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
   "dependencies": {
-    "jquery": "^3.3.1",
-    "juijs": "2.3.0"
+    "jui-core-ts": "file:../jui-core-ts",
+    "vue": "^3.4.0"
   },
   "devDependencies": {
-    "babel": "^6.23.0",
-    "babel-core": "^6.26.3",
-    "babel-loader": "^7.1.5",
-    "babel-preset-env": "^1.7.0",
-    "css-loader": "^1.0.0",
-    "extract-text-webpack-plugin": "^4.0.0-beta.0",
-    "file-loader": "^1.1.11",
-    "html-webpack-plugin": "^3.2.0",
-    "less": "^3.8.0",
-    "less-loader": "^4.1.0",
-    "optimize-css-assets-webpack-plugin": "^5.0.1",
-    "style-loader": "^0.21.0",
-    "uglifyjs-webpack-plugin": "^1.2.7",
-    "url-loader": "^1.0.1",
-    "webpack": "^4.16.4",
-    "webpack-bundle-analyzer": "^3.3.2",
-    "webpack-cli": "^3.1.0",
-    "webpack-dev-server": "^3.1.5"
+    "@vitejs/plugin-vue": "^5.0.0",
+    "@vue/test-utils": "^2.4.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-vue": "^9.33.0",
+    "globals": "^17.12.0",
+    "jsdom": "^24.0.0",
+    "less": "^3.13.1",
+    "vite": "^5.2.0",
+    "vitest": "^1.5.0"
   }
 }

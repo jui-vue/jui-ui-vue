@@ -11,4 +11,4 @@ node_modules/
 .serena/
 
 # Vue package build output
-vue/dist/
+dist/
