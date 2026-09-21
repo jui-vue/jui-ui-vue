@@ -1,0 +1,57 @@
+.vmenu {
+  > a {
+    border: 1px solid @vmenuBorderColor;
+    color: @vmenuFontColor;
+    #gradient > .vertical(@vmenuBackgroundColor1, @vmenuBackgroundColor2);
+
+    &.active {
+      border-color: @vmenuActiveBorderColor;
+      color: @vmenuActiveFontColor;
+      cursor: default;
+      #gradient > .vertical(@vmenuActiveBackgroundColor1, @vmenuActiveBackgroundColor2);
+    }
+
+    &:not(.active):hover {
+      #gradient > .vertical(@vmenuHoverBackgroundColor1, @vmenuHoverBackgroundColor2);
+    }
+  }
+
+  ul.submenu {
+    border: 1px solid @vmenuBorderColor;
+    background-color: @vmenuSubmenuBackgroundColor;
+
+    li {
+      color: @vmenuSubmenuActiveFontColor;
+
+      &:hover {
+        background-color: @vmenuSubmenuHoverBackgroundColor;
+      }
+    }
+  }
+
+  &.flat {
+    > a {
+      border-color: @vmenuFlatBorderColor;
+      color: @vmenuFlatFontColor;
+      background-image: none;
+      background-color: @vmenuFlatBackgroundColor;
+
+      &.active {
+        border-color: @vmenuFlatBorderColor;
+        color: @vmenuFlatActiveFontColor;
+        background-image: none;
+        background-color: @vmenuFlatBackgroundColor;
+      }
+
+      &:not(.active):hover {
+        background-image: none;
+        background-color: @vmenuFlatHoverBackgroundColor;
+      }
+    }
+
+    ul.submenu {
+      border-color: @vmenuFlatBorderColor;
+      background-color: @vmenuFlatSubmenuBackgroundColor;
+    }
+  }
+}

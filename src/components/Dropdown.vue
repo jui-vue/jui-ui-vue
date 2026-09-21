@@ -49,6 +49,10 @@ const props = defineProps({
     top: { type: Number, default: 0 },
     anchor: { type: Boolean, default: false }, // 말풍선 꼬리 표시
     anchorRight: { type: Boolean, default: false },
+    // 말풍선 꼬리(.anchor)의 left 위치 - 원본 dropdown.js는 이걸 계산하지 않는다(꼬리
+    // 위치는 각 예제가 트리거 엘리먼트 기준으로 직접 css()로 박아준다). 컴포넌트에는
+    // CSS 기본값(30px)만 있으므로, 트리거 위치에 맞춰야 하는 예제는 이 prop으로 넘긴다.
+    anchorLeft: { type: Number, default: undefined },
     size: { type: String, default: "normal" }, // 'normal' | 'large'
     align: { type: String, default: "left" } // 'left' | 'right'
 })
@@ -60,11 +64,22 @@ const ulEl = ref(null)
 const activeIndex = ref(-1)
 const pos = ref({ left: props.left, top: props.top })
 
+// 원본은 opts.width가 주어지면 바깥 컨테이너(.dropdown)에도 그 너비를 그대로 css()로
+// 박아준다. 여기서는 그동안 <ul>에만 width를 줬는데, dropdown.less의 `ul { position:
+// absolute !important }` 때문에 ul이 정상 흐름에서 빠져 .dropdown이 아무 콘텐츠도 없는
+// 것처럼 너비 0으로 붕괴한다 - 그 상태에서 .anchor(말풍선 꼬리)는 .dropdown 기준으로
+// 우측 정렬되므로, 컨테이너 너비가 0이면 꼬리가 엉뚱하게 왼쪽으로 밀린다(dropdown_4에서
+// items가 갱신된 뒤 재오픈할 때 실제로 이 어긋남이 관찰됨 - 프로덕션은 항상 컨테이너
+// 너비가 제대로 잡혀 있어 발생하지 않는 문제). .dropdown 쪽에도 명시적으로 width를
+// 줘서 이 붕괴를 막는다. 실측(uiplay.jui.io/?p=dropdown_4): 컨테이너는 opts.width+2,
+// ul은 opts.width 그대로 - ul이 content-box라 1px 테두리(양쪽 2px)가 더해져서
+// 렌더링 너비가 opts.width+2로 컨테이너와 맞아떨어진다.
 const rootStyle = computed(() => ({
     position: "absolute",
     display: props.modelValue ? "block" : "none",
     left: pos.value.left ? pos.value.left + "px" : undefined,
     top: pos.value.top ? pos.value.top + "px" : undefined,
+    width: props.width > 0 ? props.width + 2 + "px" : undefined,
     marginTop: props.anchor ? "10px" : undefined
 }))
 
@@ -193,7 +208,12 @@ defineExpose({ show, hide, move, wheel })
 
 <template>
     <div ref="rootEl" class="dropdown" :class="[size, { right: align === 'right' }]" :style="rootStyle">
-        <div v-if="anchor" class="anchor" :class="{ 'anchor-right': anchorRight }"></div>
+        <div
+            v-if="anchor"
+            class="anchor"
+            :class="{ 'anchor-right': anchorRight }"
+            :style="anchorLeft !== undefined ? { left: anchorLeft + 'px' } : undefined"
+        ></div>
         <ul ref="ulEl" :style="menuStyle" @click="onListClick" @mouseover="onListMouseOver">
             <template v-if="items">
                 <li

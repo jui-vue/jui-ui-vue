@@ -36,12 +36,24 @@ const emit = defineEmits([
     "dragend"
 ])
 
+// root prop이 { title, children: [{ title, children: [...] }, ...] }처럼 자식을 데이터에
+// 직접 중첩해서 선언적으로 넘기는 경우(예: play/ui의 tree.html 개요 페이지)를 지원한다 -
+// 원본/imperative API(append/insert)만 쓰는 예제는 data.children이 없으므로 영향 없다.
 function makeNode(data) {
-    return reactive({ data, parent: null, children: [], type: "open", index: null, nodenum: null, depth: 0 })
+    const node = reactive({ data, parent: null, children: [], type: "open", index: null, nodenum: null, depth: 0 })
+    if (Array.isArray(data.children)) {
+        node.children = data.children.map(makeNode)
+    }
+    return node
 }
 
 const root = makeNode(props.root)
-const activeIndex = ref(null)
+// node.index는 root 노드의 경우 null이다(reindex() 참고) - activeIndex의 '선택 없음' 상태도
+// null이면 root와 값이 같아져 TreeNode.vue의 `active: ctx.activeIndex.value === props.node.index`가
+// 페이지 로드 직후부터 root 노드에 거짓으로 true가 된다(hover도 dragEnd에서 동일 문제).
+// 그래서 내부 센티널은 어떤 노드의 index와도 절대 같을 수 없는 undefined를 쓰고,
+// 외부에 노출하는 getActiveIndex()에서만 원본 API대로 null로 변환한다.
+const activeIndex = ref(undefined)
 
 function reindex(node, nodenum, parent) {
     if (parent !== undefined) node.parent = parent
@@ -209,7 +221,7 @@ function select(nodeOrIndex, e) {
 function unselect() {
     if (activeIndex.value == null) return
     const node = getNode(activeIndex.value)
-    activeIndex.value = null
+    activeIndex.value = undefined
     return node
 }
 
@@ -238,7 +250,7 @@ function getAll(index) {
     return getNodeAll(index)
 }
 function getActiveIndex() {
-    return activeIndex.value
+    return activeIndex.value ?? null
 }
 function getRoot() {
     return root
@@ -253,7 +265,7 @@ function getRoot() {
 // false를 리턴함). Vue의 emit은 리스너의 리턴값을 모으지 않으므로, node/e 뒤에 취소용
 // control 객체(preventDefault)를 세 번째 인자로 함께 넘기고 그 결과를 직접 확인한다.
 const dragStart = ref(null) // 드래그 시작 노드의 index
-const dragEnd = ref(null) // 현재 hover 중인 대상 노드의 index
+const dragEnd = ref(undefined) // 현재 hover 중인 대상 노드의 index (activeIndex와 동일한 이유로 undefined가 '없음')
 
 function emitCancelable(name, node, nativeEvent) {
     const control = {
@@ -280,7 +292,7 @@ function dragOverNode(node, e) {
 function dragDropOnNode(node, e) {
     if (dragStart.value == null) {
         dragStart.value = null
-        dragEnd.value = null
+        dragEnd.value = undefined
         return
     }
     if (props.dragChild !== false && dragStart.value !== node.index) {
@@ -293,7 +305,7 @@ function dragDropOnNode(node, e) {
         }
     }
     dragStart.value = null
-    dragEnd.value = null
+    dragEnd.value = undefined
 }
 
 provide("treeCtx", {

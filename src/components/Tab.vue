@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, onMounted, onBeforeUnmount, markRaw, nextTick } from "vue"
+import Dropdown from "./Dropdown.vue"
 
 // 원본처럼 컴포넌트가 탭 목록을 직접 들고 있다가(localItems), 아래 defineExpose로
 // update/insert/append/prepend/remove/move/enable/disable/show/activeIndex 메서드를 제공한다.
@@ -176,19 +177,44 @@ function onDragEnd(e) {
 }
 
 // --- 오버플로우 메뉴(드롭다운) ---
+// 원본은 이 "Menu" 항목의 드롭다운을 li 안에 직접 그리지 않고, 실제 ui.dropdown
+// 컴포넌트를 body 쪽에 별도로 붙여서 트리거 위치로 show(x, y)를 호출해 띄운다
+// (uiplay.jui.io/?p=tab_5의 실제 DOM: <ul class="tab">...</ul> 뒤에 완전히 별개로
+// <div id="dd_1" class="dropdown large">가 나온다). 여기서도 같은 Dropdown.vue를
+// 재사용해 li 바깥의 형제로 렌더링하고, 클릭 시 트리거의 위치를 측정해 show(x, y)로
+// 띄운다 - li 안에 직접 그리던 예전 방식은 구조(tag)가 아예 달라 프로덕션과 diff났다.
 const menuOpen = ref(false)
 const tabRoot = ref(null)
+const menuDropdownRef = ref(null)
+
+const menuDropdownItems = computed(() => (props.menu || []).map((m) => ({ ...m })))
 
 function onMenuClick(e) {
     emit("menu", { text: "menu" }, e)
-    menuOpen.value = !menuOpen.value
+
+    if (menuOpen.value) {
+        menuOpen.value = false
+        if (menuDropdownRef.value) menuDropdownRef.value.hide()
+        return
+    }
+
+    // Dropdown.vue의 .dropdown은 position:absolute이고 그 사이에 position이 걸린
+    // 조상이 없으므로(우리도, 프로덕션도 tabRoot에 position:relative를 주지 않는다),
+    // 컨테이닝 블록은 초기 컨테이닝 블록(문서 전체)이다 - 즉 top/left는 tabRoot
+    // 기준 상대 좌표가 아니라 문서 전체 기준 절대 좌표여야 한다(실측: 프로덕션의
+    // dd_1 top은 트리거 li의 viewport 기준 bottom과 거의 일치, tabRoot의 top을
+    // 빼면 오히려 어긋난다).
+    const li = e.currentTarget
+    const rect = li.getBoundingClientRect()
+    menuOpen.value = true
+    if (menuDropdownRef.value) {
+        menuDropdownRef.value.show(rect.left + window.scrollX, rect.bottom + window.scrollY)
+    }
 }
 
-function onMenuItemClick(menuItem, index, e) {
-    if (menuItem.divider) return
-
+function onMenuDropdownChange(data) {
     menuOpen.value = false
-    emit("changemenu", { index, value: menuItem.value, text: menuItem.text }, e)
+    emit("changemenu", { index: data.index, value: data.value, text: data.text })
 }
 
 function onDocumentClick(e) {
@@ -276,52 +302,69 @@ defineExpose({ update, insert, append, prepend, remove, move, show, enable, disa
 </script>
 
 <template>
-    <div ref="tabRoot" class="jui-tab" @mouseup="onDragEnd">
-        <ul :class="[variant, position]" :style="{ order: position === 'bottom' ? 2 : 1 }">
-            <li
-                v-for="(item, index) in localItems"
-                :key="item.value ?? index"
-                :class="{ active: index === effectiveIndex, disabled: item.disabled }"
-                @click="selectTab(index, item, $event)"
-                @mousedown="onDragStart(index, $event)"
-                @mouseenter="onDragEnter(index)"
-            >
-                <a href="javascript:void(0)">{{ item.text }}</a>
-            </li>
-            <li v-if="menu && menu.length" class="menu" :class="{ checked: menuOpen }" @click="onMenuClick">
-                <a href="javascript:void(0)">Menu <i class="icon-arrow1"></i></a>
-                <div v-if="menuOpen" class="dropdown" style="display: block; left: 0; top: 100%;">
-                    <div class="anchor"></div>
-                    <ul style="position: static; min-width: 150px; white-space: nowrap;">
-                        <li
-                            v-for="(m, i) in menu"
-                            :key="m.value ?? i"
-                            :class="{ divider: m.divider }"
-                            @click.stop="onMenuItemClick(m, i, $event)"
-                        ><i v-if="m.icon" :class="`icon-${m.icon}`"></i>{{ m.divider ? "" : (m.icon ? " " : "") + m.text }}</li>
-                    </ul>
-                </div>
-            </li>
-        </ul>
-        <div class="jui-tab-content" :style="[{ order: position === 'bottom' ? 1 : 2 }, contentStyle]">
-            <div v-for="(item, idx) in localItems" v-show="idx === effectiveIndex" :key="item.value ?? idx">
-                <component
-                    :is="item.content"
-                    v-if="typeof item.content === 'object' || typeof item.content === 'function'"
-                    v-bind="item.contentProps"
-                />
-                <slot v-else :name="`panel-${item.value}`" :item="item" :index="idx" />
-            </div>
+    <!--
+      원본은 <ul class="tab ...">가 공 루트 엘리먼트이고, 콘텐츠 영역(#tab_contents_N)은
+      완전히 별개의 최상위 형제 엘리먼트다 — 감싸는 div가 없다. Vue 3는 다중 루트(Fragment)
+      템플릿을 지원하므로 여기서도 <ul>과 .jui-tab-content를 진짜 형제로 렌더링한다.
+      position="bottom"일 때 원본은 CSS order가 아니라 실제 DOM 순서를 바꿐서 콘텐츠를
+      위로 올린다(감싸는 flex 부모가 없어 order가 먹히지 않는다), 여기서도 v-if로
+      콘텐츠 블록을 ul 앞/뒤 중 한쪽에만 렌더링해 순서 자체를 바꾼다(콘텐츠 쪽
+      마크업만 두 번 적었다 — ul 쪽은 드래그/메뉴 로직이 얽혀 있어 중복시키지 않기 위함).
+    -->
+    <div v-if="position === 'bottom'" class="jui-tab-content" :style="contentStyle">
+        <div v-for="(item, idx) in localItems" v-show="idx === effectiveIndex" :key="item.value ?? idx">
+            <component
+                :is="item.content"
+                v-if="typeof item.content === 'object' || typeof item.content === 'function'"
+                v-bind="item.contentProps"
+            />
+            <slot v-else :name="`panel-${item.value}`" :item="item" :index="idx" />
         </div>
     </div>
+
+    <ul ref="tabRoot" :class="[variant, position]" @mouseup="onDragEnd">
+        <li
+            v-for="(item, index) in localItems"
+            :key="item.value ?? index"
+            :class="{ active: index === effectiveIndex, disabled: item.disabled }"
+            @click="selectTab(index, item, $event)"
+            @mousedown="onDragStart(index, $event)"
+            @mouseenter="onDragEnter(index)"
+        >
+            <a href="javascript:void(0)">{{ item.text }}</a>
+            <div v-if="index === effectiveIndex" class="anchor"></div>
+        </li>
+        <li v-if="menu && menu.length" class="menu" :class="{ checked: menuOpen }" @click="onMenuClick">
+            <a href="javascript:void(0)">Menu <i class="icon-arrow1"></i></a>
+        </li>
+    </ul>
+
+    <div v-if="position !== 'bottom'" class="jui-tab-content" :style="contentStyle">
+        <div v-for="(item, idx) in localItems" v-show="idx === effectiveIndex" :key="item.value ?? idx">
+            <component
+                :is="item.content"
+                v-if="typeof item.content === 'object' || typeof item.content === 'function'"
+                v-bind="item.contentProps"
+            />
+            <slot v-else :name="`panel-${item.value}`" :item="item" :index="idx" />
+        </div>
+    </div>
+
+    <!-- 프로덕션(uiplay.jui.io/?p=tab_5)의 실제 DOM 순서: ul, 콘텐츠, (숨겨진 template
+         스크립트,) 드롭다운 - 오버플로우 메뉴 드롭다운이 콘텐츠보다 뒤에 온다. -->
+    <Dropdown
+        v-if="menu && menu.length"
+        ref="menuDropdownRef"
+        v-model="menuOpen"
+        :items="menuDropdownItems"
+        size="large"
+        :width="150"
+        @change="onMenuDropdownChange"
+    />
 </template>
 
 <style scoped>
-.jui-tab {
-    display: flex;
-    flex-direction: column;
-}
-.jui-tab .menu {
+.menu {
     position: relative;
 }
 </style>
