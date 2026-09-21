@@ -134,11 +134,15 @@ function add(data, timeoutOverride) {
     return id
 }
 
+// 원본(notify.js)의 remove()는 opacity/slideUp 애니메이션이 다 끝난 뒤 콜백에서 "hide"를
+// emit한다(실측: uiplay.jui.io에서 타임아웃~hide 이벤트까지 약 2400ms - 설정한 timeout 2000ms
+// + 애니메이션 시간). 여기서도 배열에서 바로 splice해 퇴장 트랜지션은 즉시 시작시키되, hide
+// emit은 hideDuration만큼 늦춘다.
 function removeItem(id) {
     const idx = items.value.findIndex((i) => i.id === id)
     if (idx === -1) return
     const [removed] = items.value.splice(idx, 1)
-    emit("hide", removed.data)
+    setTimeout(() => emit("hide", removed.data), props.hideDuration)
 }
 
 function onItemClick(entry, e) {
