@@ -81,8 +81,7 @@ const containerStyle = computed(() => {
         left: toCss(pos.left),
         right: toCss(pos.right),
         display: "flex",
-        flexDirection: "column",
-        gap: `${props.distance}px`
+        flexDirection: "column"
     }
 })
 
@@ -92,6 +91,7 @@ const containerStyle = computed(() => {
 function isCentered() {
     return props.position === "top" || props.position === "bottom"
 }
+const rootEl = ref(null)
 const centerWidth = ref(null)
 function measureCenterWidth() {
     if (!isCentered()) {
@@ -101,11 +101,20 @@ function measureCenterWidth() {
     const pos = resolvedPos.value
     const left = typeof pos.left === "number" ? pos.left : 0
     const right = typeof pos.right === "number" ? pos.right : 0
-    const containerWidth = document.body.clientWidth - left - right
+    // 원본은 $container.width()를 쓰는데, $container는 target(기본값 "body")의 자식으로
+    // 붙는다 - target이 body가 아닌 특정 엘리먼트(예: notify_2의 #notify_target)일 수 있으므로
+    // document.body가 아니라 실제 부모 엘리먼트의 폭을 기준으로 삼는다.
+    const el = rootEl.value?.$el ?? rootEl.value
+    const parentWidth = el?.parentElement?.clientWidth ?? document.body.clientWidth
+    const containerWidth = parentWidth - left - right
     centerWidth.value = containerWidth - right * 3
 }
 
 const itemStyle = computed(() => ({
+    // 원본은 매 알림 엘리먼트 자체에 margin-bottom:distance를 건다(아이템 사이 간격 용도로
+    // 쓰지만, flex 아이템 마진은 안 겹치므로 마지막/유일한 알림에도 그대로 적용돼 컨테이너
+    // 가장자리에서 그만큼 더 떨어져 보인다) - 부모의 gap이 아니라 각 아이템에 직접 준다.
+    marginBottom: `${props.distance}px`,
     transitionDuration: `${props.showDuration}ms, ${props.hideDuration}ms`,
     transitionTimingFunction: `${props.showEasing}, ${props.hideEasing}`,
     // 원본은 jQuery $alarm.outerWidth(containerWidth - padding.right*3)를 호출하는데, 실측해보니
@@ -159,7 +168,7 @@ defineExpose({ add, reset })
 </script>
 
 <template>
-    <TransitionGroup tag="div" name="notify" :style="containerStyle">
+    <TransitionGroup ref="rootEl" tag="div" name="notify" :style="containerStyle">
         <div
             v-for="entry in items"
             :key="entry.id"
