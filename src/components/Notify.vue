@@ -55,7 +55,7 @@ function isTop() {
 
 // 원본 paddingObj 테이블. 단, 원본의 bottom-left는 right까지 padding 값을 넣는 복붙 버그가 있어서
 // (그러면 절대위치 left+right가 동시에 잡혀 폭이 늘어나버림, top-left와 대칭이 안 맞음) right: "auto"로 고쳤다.
-const containerStyle = computed(() => {
+const resolvedPos = computed(() => {
     const p = typeof props.padding === "number" ? props.padding : 12
     const table = {
         top: { top: p, bottom: "auto", left: p, right: p },
@@ -67,7 +67,11 @@ const containerStyle = computed(() => {
     }
     let pos = table[props.position] ?? table["top-right"]
     if (typeof props.padding === "object") pos = { ...pos, ...props.padding }
+    return pos
+})
 
+const containerStyle = computed(() => {
+    const pos = resolvedPos.value
     const toCss = (v) => (v === "auto" ? "auto" : `${v}px`)
     return {
         position: "absolute",
@@ -82,13 +86,38 @@ const containerStyle = computed(() => {
     }
 })
 
+// 원본(notify.js)의 add()는 position이 "top"/"bottom"(가운데로 폭 전체를 쓰는 배치)일 때만
+// 알림 하나하나에 $container.width() - (padding.right || DEF_PADDING) * 3 만큼의 outerWidth를
+// 직접 박아넣는다 - 코너 배치(top-right 등)는 .notify의 고정폭(268px)을 그대로 쓴다.
+function isCentered() {
+    return props.position === "top" || props.position === "bottom"
+}
+const centerWidth = ref(null)
+function measureCenterWidth() {
+    if (!isCentered()) {
+        centerWidth.value = null
+        return
+    }
+    const pos = resolvedPos.value
+    const left = typeof pos.left === "number" ? pos.left : 0
+    const right = typeof pos.right === "number" ? pos.right : 0
+    const containerWidth = document.body.clientWidth - left - right
+    centerWidth.value = containerWidth - right * 3
+}
+
 const itemStyle = computed(() => ({
     transitionDuration: `${props.showDuration}ms, ${props.hideDuration}ms`,
-    transitionTimingFunction: `${props.showEasing}, ${props.hideEasing}`
+    transitionTimingFunction: `${props.showEasing}, ${props.hideEasing}`,
+    // 원본은 jQuery $alarm.outerWidth(containerWidth - padding.right*3)를 호출하는데, 실측해보니
+    // (uiplay.jui.io) 이 값이 그대로 CSS width(content-box)로 들어가고 실제 렌더 폭은 거기에
+    // padding/border가 더 얹어진 값이 된다 - "outerWidth 계산값 = 최종 렌더 폭"이 아니다. 그대로
+    // width에 꽂아서 재현한다(box-sizing은 .notify의 기본값 content-box를 그대로 둔다).
+    width: centerWidth.value !== null ? `${centerWidth.value}px` : undefined
 }))
 
 /** 원본 add(data, timeout) — 알림 하나를 추가하고 emit("show", data) */
 function add(data, timeoutOverride) {
+    measureCenterWidth()
     const id = ++seq
     const delay = typeof timeoutOverride === "number" && !Number.isNaN(timeoutOverride) ? timeoutOverride : props.timeout
     const entry = { id, data }
