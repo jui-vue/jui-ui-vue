@@ -21,7 +21,12 @@
     background-color: @vmenuSubmenuBackgroundColor;
 
     li {
-      color: @vmenuSubmenuActiveFontColor;
+      color: @vmenuSubmenuFontColor;
+
+      &.active {
+        color: @vmenuSubmenuActiveFontColor;
+        font-weight: bold;
+      }
 
       &:hover {
         background-color: @vmenuSubmenuHoverBackgroundColor;

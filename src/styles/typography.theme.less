@@ -1,0 +1,34 @@
+// typography.theme.less - typography.less와 함께 빠져있던 파일. 원본
+// juijs/jui의 src/styles/typography.theme.less을 그대로 포팅 - 색상 변수(@typography*)는
+// 이미 theme/classic.less, theme/dark.less에 정의돼 있었다.
+
+// headline
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  color: @typographyHeadingFontColor;
+
+  > small, .sub {
+    color: @typographyHeadingSmallFontColor;
+  }
+}
+
+
+// hr
+.hr {
+  background: @typographyLineColor;
+}
+
+
+// blockquote
+.blockquote {
+  color: @typographyBlockquoteFontColor;
+  border-left: 1px solid @typographyBlockquoteBorderColor;
+  background-color: @typographyBlockquoteBackgroundColor;
+
+  > small {
+    color: @typographyBlockquoteSmallFontColor;
+  }
+}
+
+.blockquote.reverse {
+  border-right: 1px solid @typographyBlockquoteBorderColor;
+}

@@ -1,0 +1,82 @@
+// typography.less - jui-ui-vue에서 완전히 빠져있던 파일(main.less는 @import했지만 실제
+// 파일이 없어 .h1~.h6/.hr/.blockquote 규칙이 전혀 생성되지 않았다 - production 대비
+// "Typography" 데모 페이지의 헤딩 크기 계층 구조가 통째로 사라져 있던 원인). 원본
+// juijs/jui의 src/styles/typography.less을 그대로 포팅.
+
+// headline
+.h1, .h2, .h3, .h4, .h5, .h6 {
+  display: block;
+  font-weight: 500;
+
+  > small, .sub {
+    font-size: 75%;
+  }
+}
+
+.h1 {
+  font-size: 32px;
+
+  > small, .sub {
+    font-size: 65%;
+  }
+}
+
+.h2 {
+  font-size: 26px;
+
+  > small, .sub {
+    font-size: 65%;
+  }
+}
+
+.h3 {
+  font-size: 20px;
+
+  > small, .sub {
+    font-size: 65%;
+  }
+}
+
+.h4 {
+  font-size: 16px;
+}
+
+.h5 {
+  font-size: 14px;
+}
+
+.h6 {
+  font-size: 12px;
+}
+
+
+// hr
+.hr {
+  display: block;
+  height: 1px;
+}
+
+.h1 + .hr, .h2 + .hr, .h3 + .hr {
+  margin: 10px 0 24px 0;
+}
+
+.h4 + .hr, .h5 + .hr, .h6 + .hr {
+  margin: 8px 0 20px 0;
+}
+
+
+// blockquote
+.blockquote {
+  display: block;
+  font-size: 14px;
+  padding: 10px 20px;
+
+  > small {
+    font-size: 12px;
+  }
+}
+
+.blockquote.reverse {
+  text-align: right;
+  border-left-width: 0;
+}
