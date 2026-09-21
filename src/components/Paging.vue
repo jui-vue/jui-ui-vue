@@ -33,7 +33,10 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue", "page", "reload"])
 
-const lastPage = computed(() => Math.max(1, Math.ceil(props.count / props.pageCount)))
+// 원본은 Math.ceil(count / pageCount)를 그대로 쓴다 - count가 0이면 lastPage도 0이 되고,
+// 아래 pages 계산 루프가 그 경우 빈 배열을 내놓아 페이지 번호가 하나도 안 보인다(1로 밀어
+// 올리면 데이터가 없는데도 "1" 버튼이 활성화된 것처럼 보이는 게 실제 버그였다).
+const lastPage = computed(() => Math.ceil(props.count / props.pageCount))
 
 const internalPage = ref(props.modelValue ?? 1)
 const currentPage = computed(() => props.modelValue ?? internalPage.value)
@@ -109,7 +112,7 @@ defineExpose({ page, next, prev, first, last, reload })
 
 <template>
     <div class="paging" :class="size">
-        <a class="prev" href="javascript:void(0)" @click="prev"></a>
+        <a class="prev" href="javascript:void(0)" @click="prev">Previous</a>
         <div class="list">
             <template v-for="(p, idx) in pages" :key="p">
                 <!-- v-for가 반복하는 노드 사이에는 자연스러운 공백 텍스트 노드가 없다(ButtonGroup.vue와
@@ -122,6 +125,6 @@ defineExpose({ page, next, prev, first, last, reload })
                 >{{ p }}</a>
             </template>
         </div>
-        <a class="next" href="javascript:void(0)" @click="next"></a>
+        <a class="next" href="javascript:void(0)" @click="next">Next</a>
     </div>
 </template>
