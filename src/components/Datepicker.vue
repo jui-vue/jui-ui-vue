@@ -140,8 +140,11 @@ const rows = computed(() => {
     return result
 })
 
+// 원본(datepicker.js)의 getCalendarDate()도 type "yearly"에서는 year(표시 중인 12년 범위)가
+// 아니라 그냥 new Date()(오늘)를 넘긴다 - title은 항상 "오늘이 속한 연도"를 보여준다. 여기
+// early-return으로 빈 문자열을 내보내던 게 버그였다(아래 else 분기가 이미 그 동작을
+// 구현해뒀는데 도달하지 못했다).
 const title = computed(() => {
-    if (props.type === "yearly") return ""
     let d
     if (props.type === "daily") {
         const mm = viewMonth.value < 10 ? "0" + viewMonth.value : String(viewMonth.value)
