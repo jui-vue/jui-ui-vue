@@ -25,9 +25,15 @@ function today() {
     return getStartDate(new Date())
 }
 
-const selDate = ref(props.modelValue ? getStartDate(props.modelValue) : today())
-const viewYear = ref(selDate.value.getFullYear())
-const viewMonth = ref(selDate.value.getMonth() + 1)
+// 원본(datepicker.js)도 date 옵션을 안 주면 selDate는 null로 시작한다 - "오늘"은 달력을
+// 어느 달로 열지 정하는 데만 쓰이고, 실제로 사용자가 고르기 전까지는 어떤 날짜도
+// "active"(선택됨)로 표시되지 않는다. 여기서 selDate를 today()로 초기화했더니 오늘 날짜가
+// 곧바로 active 취급되어 "now"(오늘 강조) 스타일이 active 스타일에 항상 덮여 사라지는
+// 버그가 있었다.
+const selDate = ref(props.modelValue ? getStartDate(props.modelValue) : null)
+const viewDate = selDate.value ?? today()
+const viewYear = ref(viewDate.getFullYear())
+const viewMonth = ref(viewDate.getMonth() + 1)
 
 function checkDate(y, m, d) {
     if (props.minDate) {
