@@ -25,15 +25,14 @@ function today() {
     return getStartDate(new Date())
 }
 
-// 원본(datepicker.js)도 date 옵션을 안 주면 selDate는 null로 시작한다 - "오늘"은 달력을
-// 어느 달로 열지 정하는 데만 쓰이고, 실제로 사용자가 고르기 전까지는 어떤 날짜도
-// "active"(선택됨)로 표시되지 않는다. 여기서 selDate를 today()로 초기화했더니 오늘 날짜가
-// 곧바로 active 취급되어 "now"(오늘 강조) 스타일이 active 스타일에 항상 덮여 사라지는
-// 버그가 있었다.
-const selDate = ref(props.modelValue ? getStartDate(props.modelValue) : null)
-const viewDate = selDate.value ?? today()
-const viewYear = ref(viewDate.getFullYear())
-const viewMonth = ref(viewDate.getMonth() + 1)
+// 원본(datepicker.js)의 date 옵션 기본값은 now(오늘)이고, init()이 끝에서 무조건
+// this.select(opts.date)를 호출한다 - 즉 명시적으로 date를 안 주면 오늘이 항상 selDate로
+// 미리 선택된 채 시작한다("active"). 그리고 오늘 셀은 "now"와 "active" 조건이 둘 다 참이면
+// 두 클래스를 함께 받는다(class="now active" - 실제 운영 사이트 렌더 결과로 확인됨). 단일
+// type 문자열로 덮어쓰면 이 조합이 나올 수 없어서, 여기서는 배열로 모아 공백 join한다.
+const selDate = ref(props.modelValue ? getStartDate(props.modelValue) : today())
+const viewYear = ref(selDate.value.getFullYear())
+const viewMonth = ref(selDate.value.getMonth() + 1)
 
 function checkDate(y, m, d) {
     if (props.minDate) {
@@ -76,12 +75,12 @@ function getDateList(y, m) {
     }
     for (let i = start; i < 42; i++) {
         if (sdate <= no && no <= ldate) {
-            let type = ""
-            if (d.getMonth() + 1 === m && d.getDate() === no) type = "now"
+            const classes = []
+            if (d.getMonth() + 1 === m && d.getDate() === no) classes.push("now")
             if (selDate.value && selDate.value.getFullYear() === y && selDate.value.getMonth() + 1 === m && selDate.value.getDate() === no) {
-                type = "active"
+                classes.push("active")
             }
-            cells[i] = { type, no, day: i % 7 }
+            cells[i] = { type: classes.join(" "), no, day: i % 7 }
             no++
         } else if (no > ldate) {
             // 이번 달의 실제 마지막 날(getLastDate) 이후 = 다음 달로 넘어간 채움 칸
@@ -103,10 +102,10 @@ function getMonthList(y) {
     const d = new Date()
     const cells = []
     for (let i = 1; i <= 12; i++) {
-        let type = ""
-        if (d.getFullYear() === y && d.getMonth() + 1 === i) type = "now"
-        if (selDate.value && selDate.value.getFullYear() === y && selDate.value.getMonth() + 1 === i) type = "active"
-        cells.push({ type, no: i })
+        const classes = []
+        if (d.getFullYear() === y && d.getMonth() + 1 === i) classes.push("now")
+        if (selDate.value && selDate.value.getFullYear() === y && selDate.value.getMonth() + 1 === i) classes.push("active")
+        cells.push({ type: classes.join(" "), no: i })
     }
     return cells
 }
@@ -116,10 +115,10 @@ function getYearList(y) {
     const cells = []
     const startYear = y - 4
     for (let i = startYear; i < startYear + 12; i++) {
-        let type = ""
-        if (d.getFullYear() === i) type = "now"
-        if (selDate.value && selDate.value.getFullYear() === i) type = "active"
-        cells.push({ type, no: i })
+        const classes = []
+        if (d.getFullYear() === i) classes.push("now")
+        if (selDate.value && selDate.value.getFullYear() === i) classes.push("active")
+        cells.push({ type: classes.join(" "), no: i })
     }
     return cells
 }
@@ -298,9 +297,9 @@ defineExpose({ page, prev, next, select, addTime, getDate, getTime, getFormat, r
     <div :class="{ [variant]: true, [size]: size !== 'normal' }">
         <div class="head" :class="{ 'move-year': moveYear }">
             <div v-if="moveYear" class="prev-year" @click="prev(true)">&laquo;</div>
-            <div class="prev" @click="prev(false)"><i v-if="variant === 'datepicker'" class="icon-chevron-left"></i></div>
+            <div class="prev" @click="prev(false)"><i class="icon-chevron-left"></i></div>
             <div class="title">{{ title }}</div>
-            <div class="next" @click="next(false)"><i v-if="variant === 'datepicker'" class="icon-chevron-right"></i></div>
+            <div class="next" @click="next(false)"><i class="icon-chevron-right"></i></div>
             <div v-if="moveYear" class="next-year" @click="next(true)">&raquo;</div>
         </div>
         <table class="body">
