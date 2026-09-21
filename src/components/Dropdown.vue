@@ -54,7 +54,8 @@ const props = defineProps({
     // CSS 기본값(30px)만 있으므로, 트리거 위치에 맞춰야 하는 예제는 이 prop으로 넘긴다.
     anchorLeft: { type: Number, default: undefined },
     size: { type: String, default: "normal" }, // 'normal' | 'large'
-    align: { type: String, default: "left" } // 'left' | 'right'
+    align: { type: String, default: "left" }, // 'left' | 'right'
+    dropup: { type: Boolean, default: false } // 위쪽으로 펼쳐지는 변형(.dropup)
 })
 
 const emit = defineEmits(["update:modelValue", "change", "show", "hide", "click"])
@@ -79,8 +80,7 @@ const rootStyle = computed(() => ({
     display: props.modelValue ? "block" : "none",
     left: pos.value.left ? pos.value.left + "px" : undefined,
     top: pos.value.top ? pos.value.top + "px" : undefined,
-    width: props.width > 0 ? props.width + 2 + "px" : undefined,
-    marginTop: props.anchor ? "10px" : undefined
+    width: props.width > 0 ? props.width + 2 + "px" : undefined
 }))
 
 const menuStyle = computed(() => ({
@@ -207,7 +207,7 @@ defineExpose({ show, hide, move, wheel })
 </script>
 
 <template>
-    <div ref="rootEl" class="dropdown" :class="[size, { right: align === 'right' }]" :style="rootStyle">
+    <div ref="rootEl" :class="[dropup ? 'dropup' : 'dropdown', size, { right: align === 'right' }]" :style="rootStyle">
         <div
             v-if="anchor"
             class="anchor"
