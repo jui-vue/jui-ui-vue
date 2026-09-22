@@ -82,6 +82,45 @@ describe("Tooltip", () => {
         expect(wrapper.find(".tooltip .message").text()).toBe("new")
     })
 
+    it("flips top to bottom when the trigger sits at the very top of the viewport", async () => {
+        const wrapper = mount(Tooltip, { props: { text: "hi", position: "top" } })
+        const originalGetRect = Element.prototype.getBoundingClientRect
+        Element.prototype.getBoundingClientRect = function () {
+            return this.classList.contains("tooltip")
+                ? { top: -20, bottom: 0, left: 0, right: 100, width: 100, height: 20 }
+                : { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 }
+        }
+
+        await wrapper.trigger("mouseover")
+        vi.runAllTimers()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.find(".tooltip").classes()).toContain("bottom")
+        expect(wrapper.find(".tooltip").classes()).not.toContain("top")
+
+        Element.prototype.getBoundingClientRect = originalGetRect
+    })
+
+    it("keeps the given position when there is room in the viewport", async () => {
+        const wrapper = mount(Tooltip, { props: { text: "hi", position: "top" } })
+        const originalGetRect = Element.prototype.getBoundingClientRect
+        Element.prototype.getBoundingClientRect = function () {
+            return this.classList.contains("tooltip")
+                ? { top: 40, bottom: 60, left: 0, right: 100, width: 100, height: 20 }
+                : { top: 0, bottom: 0, left: 0, right: 0, width: 0, height: 0 }
+        }
+
+        await wrapper.trigger("mouseover")
+        vi.runAllTimers()
+        await wrapper.vm.$nextTick()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.find(".tooltip").classes()).toContain("top")
+
+        Element.prototype.getBoundingClientRect = originalGetRect
+    })
+
     it("a #tooltip slot overrides the default message rendering (popover-style custom content)", async () => {
         const wrapper = mount(Tooltip, {
             props: { text: "ignored" },
