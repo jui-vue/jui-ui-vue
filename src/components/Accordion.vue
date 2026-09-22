@@ -8,7 +8,9 @@ import { ref, computed, onMounted } from "vue"
 // 동시에 여러 패널이 열려야 하므로 Tab과 동일하게 모든 콘텐츠를 렌더링해두고 v-show로 토글한다.
 const props = defineProps({
     items: {
-        // { title, value?, content?, contentProps? }
+        // { title, value?, content?, contentProps?, contentClass? }
+        // contentClass merges onto the .content wrapper itself (not a child of it) - needed by
+        // CSS like `.content.has-property { padding: 0 }` that targets the combined selector.
         type: Array,
         required: true
     },
@@ -88,7 +90,7 @@ defineExpose({ activeIndex })
                 {{ item.title }}
                 <slot name="icon" :index="index" :open="isOpen(index)" />
             </div>
-            <div v-show="isOpen(index)" class="content">
+            <div v-show="isOpen(index)" class="content" :class="item.contentClass">
                 <component
                     :is="item.content"
                     v-if="typeof item.content === 'object' || typeof item.content === 'function'"
