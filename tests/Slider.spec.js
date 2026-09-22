@@ -94,4 +94,24 @@ describe("Slider", () => {
         expect(tooltip.find(".message").text()).toBe("5")
         wrapper.unmount()
     })
+
+    it("does not emit 'change' from the initial mount-time value, only from real interaction", async () => {
+        // 원본은 마운트 시 초기 위치를 잡는 setFromValue()/setToValue() 호출에서 change를 쏘지
+        // 않는다 - 이 이벤트에 반응해 뭔가 보여주는 데모(slider_2)가 로드하자마자 표시되는
+        // 버그로 실제로 드러났었다.
+        const wrapper = mount(Slider, {
+            props: { type: "double", min: 0, max: 100, from: 50, to: 70, step: 1 },
+            attachTo: document.body
+        })
+        await wrapper.vm.$nextTick()
+        expect(wrapper.emitted("change")).toBeUndefined()
+
+        stubTrack(wrapper)
+        document.dispatchEvent(new MouseEvent("mousemove", { clientX: 20, clientY: 0 }))
+        await wrapper.find(".handle.from").trigger("mousedown")
+        document.dispatchEvent(new MouseEvent("mousemove", { clientX: 20, clientY: 0 }))
+        await wrapper.vm.$nextTick()
+        expect(wrapper.emitted("change")).toBeDefined()
+        wrapper.unmount()
+    })
 })

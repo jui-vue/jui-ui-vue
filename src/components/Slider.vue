@@ -68,7 +68,7 @@ function checkMaxFromTo(dist, type) {
     return dist
 }
 
-async function setViewStatus(distPercent, type) {
+async function setViewStatus(distPercent, type, suppressChange) {
     let value = distToValue(distPercent / 100)
     if (value < props.min) value = props.min
     if (value > props.max) value = props.max
@@ -95,13 +95,15 @@ async function setViewStatus(distPercent, type) {
     if (type === "from") {
         if (preFromValue !== value) {
             emit("update:from", value)
-            emit("change", { type, from: value, to: getToValue() })
+            // 원본은 마운트 시 초기 위치를 잡는 setFromValue()/setToValue() 호출에서는 change를
+            // 쏘지 않는다 - 실제 사용자가 드래그(또는 이후의 프로그래매틱 호출)해야만 울린다.
+            if (!suppressChange) emit("change", { type, from: value, to: getToValue() })
             preFromValue = value
         }
     } else {
         if (preToValue !== value) {
             emit("update:to", value)
-            emit("change", { type, from: getFromValue(), to: value })
+            if (!suppressChange) emit("change", { type, from: getFromValue(), to: value })
             preToValue = value
         }
     }
@@ -190,21 +192,21 @@ function getFromValue() {
 function getToValue() {
     return isDouble.value ? distToValue(toDist.value / 100) : getFromValue()
 }
-function setFromValue(value) {
+function setFromValue(value, suppressChange) {
     const from = value !== undefined ? value : props.from
-    setViewStatus(((from - props.min) / (props.max - props.min)) * 100, "from")
+    return setViewStatus(((from - props.min) / (props.max - props.min)) * 100, "from", suppressChange)
 }
-function setToValue(value) {
+function setToValue(value, suppressChange) {
     if (!isDouble.value) return
     const to = value !== undefined ? value : props.to
-    setViewStatus(((to - props.min) / (props.max - props.min)) * 100, "to")
+    return setViewStatus(((to - props.min) / (props.max - props.min)) * 100, "to", suppressChange)
 }
 
 onMounted(() => {
     document.addEventListener("mouseup", onDocMouseUp)
     document.addEventListener("mousemove", onDocMouseMove)
-    setFromValue()
-    setToValue()
+    setFromValue(undefined, true)
+    setToValue(undefined, true)
 })
 onBeforeUnmount(() => {
     document.removeEventListener("mouseup", onDocMouseUp)
