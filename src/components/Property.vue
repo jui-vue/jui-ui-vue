@@ -8,7 +8,7 @@
 // 원본은 items를 DOM에 직접 그려 넣고(jQuery), 그룹 접기/펼치기도 이후 형제 DOM 노드를
 // while로 순회하며 show/hide 했다 — Vue 버전은 "각 행이 속한 그룹"을 미리 계산해두고
 // collapsedGroups(Set)에 따라 v-show로 표시 여부만 반응형으로 바꾼다.
-import { reactive, ref, computed } from "vue"
+import { reactive, ref, computed, nextTick } from "vue"
 import Switch from "./Switch.vue"
 import Datepicker from "./Datepicker.vue"
 import Colorpicker from "./Colorpicker.vue"
@@ -188,21 +188,77 @@ function onRangeInput(index, e) {
     debouncedText(index, value + (item.postfix || ""))
 }
 
+// ---- popup positioning ----
+// .property-item에는 overflow:hidden이 걸려 있어서(그룹 접기 애니메이션 때문에 필요),
+// date/color 팝업을 그 안에 그대로 두면 행 높이를 넘어가는 부분이 통째로 잘린다. 원본도
+// 실제로는 팝업을 .property-table 바로 아래(각 행의 overflow:hidden 밖)에 붙이므로, 여기서도
+// 팝업을 v-for 루프 밖으로 옮기고 트리거 엘리먼트의 위치를 직접 계산해서 붙인다.
+//
+// 원본(ui.min.js) 그대로의 공식 - "트리거 바로 아래"가 아니라 트리거 top에 타입별 고정
+// 오프셋(date +80, color +50)을 더한 값이다(오버랩되어도 원본이 그렇다):
+//   left = trigger.offset().left - root.offset().left
+//          (넘치면 root.outerWidth() - popup.outerWidth() - 20 로 clamp)
+//   top  = trigger.offset().top  - root.offset().top + OFFSET
+//          (넘치면 root.outerHeight() - popup.outerHeight() - 20 로 clamp)
+const rootEl = ref(null)
+const popupPos = ref({ top: 0, left: 0 })
+const popupReady = ref(false) // 위치 계산 전 프레임에 (0,0)으로 잠깐 보이는 걸 막는 플래그
+const datepickerEl = ref(null) // Datepicker 컴포넌트 인스턴스(.$el로 실제 DOM 취득)
+const colorpickerEl = ref(null)
+function unwrapEl(refValue) {
+    return refValue?.$el ?? refValue ?? null
+}
+function positionPopupAt(triggerEl, popupRef, topOffset) {
+    popupReady.value = false
+    nextTick(() => {
+        const popupEl = unwrapEl(popupRef.value)
+        if (!triggerEl || !rootEl.value || !popupEl) return
+        const rootRect = rootEl.value.getBoundingClientRect()
+        const triggerRect = triggerEl.getBoundingClientRect()
+        const rootWidth = rootEl.value.offsetWidth
+        const rootHeight = rootEl.value.offsetHeight
+        const popupWidth = popupEl.offsetWidth
+        const popupHeight = popupEl.offsetHeight
+
+        let left = triggerRect.left - rootRect.left
+        if (left + popupWidth >= rootWidth) left = rootWidth - popupWidth - 20
+        let top = triggerRect.top - rootRect.top + topOffset
+        if (top + popupHeight >= rootHeight) top = rootHeight - popupHeight - 20
+
+        popupPos.value = { top, left }
+        popupReady.value = true
+    })
+}
+
 // ---- date popup ----
 const openDatePopup = ref(null) // 열려있는 date 편집기의 index
-function toggleDate(index) {
-    openDatePopup.value = openDatePopup.value === index ? null : index
+function toggleDate(index, e) {
+    const next = openDatePopup.value === index ? null : index
+    openDatePopup.value = next
+    if (next !== null) positionPopupAt(e.currentTarget.closest(".datepicker-input"), datepickerEl, 80)
 }
 function onDateSelect(index, formatted) {
     refreshValue(index, formatted)
     openDatePopup.value = null
 }
+const openDateItem = computed(() => (openDatePopup.value !== null ? localItems[openDatePopup.value] : null))
 
 // ---- color / colors popup ----
 const openColorPopup = ref(null) // "index" 또는 "index:subIndex"(colors 타입)
-function toggleColor(key) {
-    openColorPopup.value = openColorPopup.value === key ? null : key
+function toggleColor(key, e) {
+    const next = openColorPopup.value === key ? null : key
+    openColorPopup.value = next
+    if (next !== null) positionPopupAt(e.currentTarget.closest("a.color-input"), colorpickerEl, 50)
 }
+const openColorInfo = computed(() => {
+    if (openColorPopup.value === null) return null
+    const [idxStr, subStr] = String(openColorPopup.value).split(":")
+    const index = +idxStr
+    const item = localItems[index]
+    if (!item) return null
+    if (subStr !== undefined) return { index, subIndex: +subStr, value: item.value?.[+subStr] || "#ffffff" }
+    return { index, value: item.value || "#ffffff" }
+})
 function onColorChange(index, hex) {
     refreshValue(index, hex)
 }
@@ -244,7 +300,7 @@ defineExpose({
 </script>
 
 <template>
-    <div class="property-table" style="position: relative;">
+    <div ref="rootEl" class="property-table" style="position: relative;">
         <template v-for="(item, index) in localItems" :key="index">
             <div v-show="isVisible(index)" class="property-item" :class="{ 'property-header-item': item.type === 'group', expanded: item.type === 'group' && !collapsedGroups.has(index), collapsed: item.type === 'group' && collapsedGroups.has(index), vertical: item.vertical || (item.type !== 'group' && Array.isArray(item.value)) }" :data-key="item.key" @click="item.type === 'group' ? toggleGroup(index) : null">
                 <template v-if="item.type === 'group'">
@@ -337,40 +393,27 @@ defineExpose({
                             />
 
                             <div v-else-if="item.type === 'date'" class="datepicker-input" style="position: relative;">
-                                <i class="icon-calendar" @click="toggleDate(index)"></i>
-                                <span class="datepicker-value-text" style="cursor: pointer;" @click="toggleDate(index)">{{ item.value }}</span>
-                                <div v-if="openDatePopup === index" class="datepicker" style="position: absolute; z-index: 100000; top: 100%; left: 0;">
-                                    <Datepicker
-                                        :title-format="item.titleFormat || 'yyyy. MM'"
-                                        :format="item.format || 'yyyy/MM/dd'"
-                                        @select="(formatted) => onDateSelect(index, formatted)"
-                                    />
-                                </div>
+                                <i class="icon-calendar" @click="toggleDate(index, $event)"></i>
+                                <span class="datepicker-value-text" style="cursor: pointer;" @click="toggleDate(index, $event)">{{ item.value }}</span>
                             </div>
 
                             <div v-else-if="item.type === 'color'" style="position: relative;">
-                                <a class="color-input" @click.stop="toggleColor(`${index}`)">
+                                <a class="color-input" @click.stop="toggleColor(`${index}`, $event)">
                                     <span :style="{ backgroundColor: item.value || 'transparent' }">&nbsp;</span>
                                     <span>{{ item.value || "" }}</span>
                                     <span class="none-color" title="Delete a color" @click.stop="clearColor(index)"><i class="icon-more"></i></span>
                                 </a>
-                                <div v-if="openColorPopup === `${index}`" class="colorpicker" style="position: absolute; z-index: 100000; top: 100%; left: 0;">
-                                    <Colorpicker :model-value="item.value || '#ffffff'" @change="(hex) => onColorChange(index, hex)" />
-                                </div>
                             </div>
 
                             <div v-else-if="item.type === 'colors'">
                                 <span v-for="(c, ci) in item.value" :key="ci" style="position: relative; display: inline-block;">
-                                    <a class="color-input" @click.stop="toggleColor(`${index}:${ci}`)">
+                                    <a class="color-input" @click.stop="toggleColor(`${index}:${ci}`, $event)">
                                         <span :style="{ backgroundColor: c || 'transparent' }">&nbsp;</span>
                                         <span>{{ c || "" }}</span>
                                         <!-- 원본은 colors 배열이어도 delete 클릭 시 항목 하나만 지우지 않고
                                              item.value 전체를 빈 문자열로 덮어쓴다 — 그 동작을 그대로 둔다. -->
                                         <span class="none-color" title="Delete a color" @click.stop="clearColor(index)"><i class="icon-more"></i></span>
                                     </a>
-                                    <div v-if="openColorPopup === `${index}:${ci}`" class="colorpicker" style="position: absolute; z-index: 100000; top: 100%; left: 0;">
-                                        <Colorpicker :model-value="c || '#ffffff'" @change="(hex) => onColorsChange(index, ci, hex)" />
-                                    </div>
                                 </span>
                             </div>
 
@@ -391,5 +434,31 @@ defineExpose({
                 </template>
             </div>
         </template>
+
+        <!-- .property-item의 overflow:hidden 밖(행 클리핑을 피해서)에 팝업을 붙인다 - positionPopupAt()이
+             연 시점의 트리거 위치를 읽어 popupPos에 좌표를 채워 넣는다.
+             원본도 이 팝업을 .property-table이 아니라 그 부모(.property)에 형제로 붙인다 - .property는
+             position:static이라 실제 containing block은 한 단계 더 위(.property-container)로 올라간다.
+             popupPos 계산 자체는(원본과 동일하게) .property-table 기준 상대값이므로, 우리도 이 팝업을
+             .property-table 밖(부모)으로 Teleport해야 같은 containing block 결과가 나온다 - 안에 그냥 두면
+             .property-table 자신이 containing block이 되어 그만큼(.property-table의 offset) 더 아래로 밀린다. -->
+        <Teleport v-if="rootEl" :to="rootEl.parentElement">
+            <Datepicker
+                v-if="openDateItem"
+                ref="datepickerEl"
+                :style="{ position: 'absolute', zIndex: 100000, top: popupPos.top + 'px', left: popupPos.left + 'px', visibility: popupReady ? 'visible' : 'hidden' }"
+                :title-format="openDateItem.titleFormat || 'yyyy. MM'"
+                :format="openDateItem.format || 'yyyy/MM/dd'"
+                @select="(formatted) => onDateSelect(openDatePopup, formatted)"
+            />
+
+            <Colorpicker
+                v-if="openColorInfo"
+                ref="colorpickerEl"
+                :style="{ position: 'absolute', zIndex: 100000, top: popupPos.top + 'px', left: popupPos.left + 'px', visibility: popupReady ? 'visible' : 'hidden' }"
+                :model-value="openColorInfo.value"
+                @change="(hex) => (openColorInfo.subIndex !== undefined ? onColorsChange(openColorInfo.index, openColorInfo.subIndex, hex) : onColorChange(openColorInfo.index, hex))"
+            />
+        </Teleport>
     </div>
 </template>
