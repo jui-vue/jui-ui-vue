@@ -262,6 +262,10 @@ const opacityDragBarStyle = computed(() => ({
     left: opacityPos.value.x - Math.ceil(SIZE.opacityDragBarWidth / 2) + "px"
 }))
 const colorBgStyle = computed(() => ({ backgroundColor: hueBg.value }))
+// 원본 CSS에 정의만 되어 있고 어디에도 쓰이지 않던 .opacity_gradient() 믹스인을 실제로 적용한다 -
+// 불투명도 바를 현재 색조에서 투명까지 흐르는 그라데이션으로 보여줘서 어떤 값인지 미리보기가
+// 되도록(빈 회색 막대 뒤로는 .container의 체크무늬 배경이 비쳐 보인다).
+const opacityBarStyle = computed(() => ({ backgroundImage: `linear-gradient(to right, transparent, ${hueBg.value})` }))
 const controlColorStyle = computed(() => ({ backgroundColor: controlColorBg.value }))
 
 function setColor(value) {
@@ -295,6 +299,7 @@ defineExpose({ setColor, getColor })
             </div>
             <div ref="opacityEl" class="opacity">
                 <div class="container" @mousedown="onOpacityContainerMouseDown">
+                    <div class="gradient" :style="opacityBarStyle"></div>
                     <div class="drag-bar2" :style="opacityDragBarStyle" @mousedown="onOpacityDragBarMouseDown"></div>
                 </div>
             </div>
