@@ -152,6 +152,9 @@ const dragIndex = ref(null)
 function onDragStart(index, e) {
     if (!props.drag) return
 
+    // 없으면 <a> 태그의 네이티브 드래그 제스처가 끼어들어서, 드래그 도중 다른 탭으로 넘어갈 때
+    // mouseenter 자체가 안 울린다(재정렬이 즉시 반영되지 않고 부자연스럽게 느껴지던 원인).
+    e.preventDefault()
     dragIndex.value = index
     emit("dragstart", index, e)
 }
