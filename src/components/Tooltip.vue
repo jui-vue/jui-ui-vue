@@ -55,30 +55,33 @@ watch(
 
 const visible = ref(false)
 const bubbleRef = ref(null)
-// position prop대로 뒀을 때 뷰포트 밖으로 나가 완전히 안 보이는 경우를 위한 폴백 - 트리거가
+// position prop대로 뒀을 때 뷰포트 밖으로 나가 완전히 안 보이는 경우를 위한 보정 - 트리거가
 // 뷰포트 가장자리에 붙어있으면("top"인데 위쪽 공간이 아예 없는 경우 등) 실제로 재현됨(예:
 // tooltip_1 데모의 "Top" 버튼은 페이지 맨 위에 있어 위로 띄우면 전부 화면 밖으로 나간다).
-// 원본(tooltip.js)은 좌표를 1px로 clamp하는데, 그러면 대신 트리거 자체와 겹쳐서 깜빡이는
-// 버그가 생긴다(겹친 툴팁이 커서를 가려 mouseout이 발동) - 겹치지 않고 반대쪽으로 뒤집는다.
-const effectivePosition = ref(props.position)
+// position 자체를 바꾸지 않는다(요청 위치가 "top"이면 계속 "top"으로 보여야 함) - 화면 밖으로
+// 나가는 만큼만 안쪽으로 밀어넣는다. 트리거와 겹칠 수 있는데, 겹쳐도 깜빡이지 않도록
+// .tooltip에 pointer-events:none을 줘서 커서가 항상 트리거 위에 있는 것으로 취급되게 한다
+// (원본은 좌표를 1px로 clamp만 하고 pointer-events는 그대로라 실제로 깜빡이는 버그가 있다 -
+// uiplay의 실제 grid.min.js 소스 + 인터랙션 테스트로 확인됨).
+const nudge = ref({ x: 0, y: 0 })
 let timer = null
 
 function adjustForViewport() {
     const el = bubbleRef.value
     if (!el) return
     const rect = el.getBoundingClientRect()
-    // 살짝 걸치는 정도(서브픽셀~몇 px)로는 뒤집지 않는다 - 절반 넘게 잘려서 사실상 안 보일
-    // 때만 반대쪽으로 옮긴다("Left"가 뷰포트 경계에 1px 못 미치게 겹친다고 "Right"로 바뀌어
-    // 버리면, 요청하지도 않은 위치 변경이 된다).
-    if (effectivePosition.value === "top" && rect.top < -rect.height / 2) effectivePosition.value = "bottom"
-    else if (effectivePosition.value === "bottom" && rect.bottom > window.innerHeight + rect.height / 2) effectivePosition.value = "top"
-    else if (effectivePosition.value === "left" && rect.left < -rect.width / 2) effectivePosition.value = "right"
-    else if (effectivePosition.value === "right" && rect.right > window.innerWidth + rect.width / 2) effectivePosition.value = "left"
+    let dx = 0
+    let dy = 0
+    if (rect.top < 0) dy = -rect.top
+    else if (rect.bottom > window.innerHeight) dy = window.innerHeight - rect.bottom
+    if (rect.left < 0) dx = -rect.left
+    else if (rect.right > window.innerWidth) dx = window.innerWidth - rect.right
+    nudge.value = { x: dx, y: dy }
 }
 
 async function doShow(e) {
     if (internalText.value === "") return
-    effectivePosition.value = props.position
+    nudge.value = { x: 0, y: 0 }
     visible.value = true
     emit("show", e)
     await nextTick()
@@ -130,7 +133,7 @@ defineExpose({ update })
             v-if="visible"
             ref="bubbleRef"
             class="tooltip"
-            :class="effectivePosition"
+            :class="position"
             :style="{
                 // width:max-content가 없으면, 이 박스의 containing block(트리거 span, 보통 아주 좁음)
                 // 기준으로 left:50% 지점부터 남는 공간만으로 shrink-to-fit 폭을 계산해버려서
@@ -140,11 +143,11 @@ defineExpose({ update })
                 textAlign: align,
                 backgroundColor: color || undefined,
                 ...({
-                    top: { bottom: '100%', left: '50%', transform: 'translateX(-50%)' },
-                    bottom: { top: '100%', left: '50%', transform: 'translateX(-50%)' },
-                    left: { right: '100%', top: '50%', transform: 'translateY(-50%)' },
-                    right: { left: '100%', top: '50%', transform: 'translateY(-50%)' }
-                }[effectivePosition])
+                    top: { bottom: '100%', left: '50%', transform: `translateX(-50%) translate(${nudge.x}px, ${nudge.y}px)` },
+                    bottom: { top: '100%', left: '50%', transform: `translateX(-50%) translate(${nudge.x}px, ${nudge.y}px)` },
+                    left: { right: '100%', top: '50%', transform: `translateY(-50%) translate(${nudge.x}px, ${nudge.y}px)` },
+                    right: { left: '100%', top: '50%', transform: `translateY(-50%) translate(${nudge.x}px, ${nudge.y}px)` }
+                }[position])
             }"
         >
             <div class="anchor"></div>

@@ -5,6 +5,12 @@
   font-size: 11px;
   line-height: 1.4;
   visibility: visible;
+  // 뷰포트 가장자리 보정(Tooltip.vue의 nudge)으로 트리거와 겹칠 수 있는데, 겹친 상태에서
+  // 마우스 이벤트를 가로채면 커서 아래 엘리먼트가 계속 바뀌어(트리거<->tooltip) mouseover/
+  // mouseout이 반복 발동하는 깜빡임 버그가 생긴다 - 클릭 가능한 콘텐츠가 없으므로 항상
+  // 통과시켜 트리거가 계속 hover된 상태로 취급되게 한다. (순수 시각 속성이라 픽셀 렌더링에는
+  // 영향 없음.)
+  pointer-events: none;
 }
 
 .tooltip > .message {

@@ -82,7 +82,7 @@ describe("Tooltip", () => {
         expect(wrapper.find(".tooltip .message").text()).toBe("new")
     })
 
-    it("flips top to bottom when the trigger sits at the very top of the viewport", async () => {
+    it("nudges the bubble back into view without changing its position when clipped off the top", async () => {
         const wrapper = mount(Tooltip, { props: { text: "hi", position: "top" } })
         const originalGetRect = Element.prototype.getBoundingClientRect
         Element.prototype.getBoundingClientRect = function () {
@@ -96,13 +96,16 @@ describe("Tooltip", () => {
         await wrapper.vm.$nextTick()
         await wrapper.vm.$nextTick()
 
-        expect(wrapper.find(".tooltip").classes()).toContain("bottom")
-        expect(wrapper.find(".tooltip").classes()).not.toContain("top")
+        const bubble = wrapper.find(".tooltip")
+        expect(bubble.classes()).toContain("top")
+        // 20px 위로 잘렸으니 그만큼 아래로 밀어넣는다(translate에 그대로 반영됐는지만 확인 -
+        // 실제 화면 밖 보정 여부는 jsdom에 레이아웃이 없어 픽셀로는 검증할 수 없다).
+        expect(bubble.attributes("style")).toContain("translate(0px, 20px)")
 
         Element.prototype.getBoundingClientRect = originalGetRect
     })
 
-    it("keeps the given position when there is room in the viewport", async () => {
+    it("does not nudge when the bubble is already fully within the viewport", async () => {
         const wrapper = mount(Tooltip, { props: { text: "hi", position: "top" } })
         const originalGetRect = Element.prototype.getBoundingClientRect
         Element.prototype.getBoundingClientRect = function () {
@@ -116,7 +119,7 @@ describe("Tooltip", () => {
         await wrapper.vm.$nextTick()
         await wrapper.vm.$nextTick()
 
-        expect(wrapper.find(".tooltip").classes()).toContain("top")
+        expect(wrapper.find(".tooltip").attributes("style")).toContain("translate(0px, 0px)")
 
         Element.prototype.getBoundingClientRect = originalGetRect
     })
