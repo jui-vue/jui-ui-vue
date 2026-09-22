@@ -147,8 +147,10 @@
       box-sizing:border-box;
     }
 
-    /* text */
-    input[type=text]{
+    /* text - property-render > item의 "직접" 텍스트 필드에만 적용(하위 셀렉터라 안 걸어두면
+       colorpicker/datepicker처럼 .item 안에 중첩된 다른 컴포넌트의 input[type=text](HEX/RGB,
+       퍼센트 표시 등)까지 덮어써서 그쪽 고유 스타일(테두리/둥근 모서리)을 다 지워버린다). */
+    > .property-render > .item > input[type=text]{
       width: 100%;
       max-width:300px;
       border: 0px;
