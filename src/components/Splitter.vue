@@ -107,11 +107,15 @@ const barStyleComputed = computed(() => {
 })
 
 let prevClient = 0
+let prevBodyUserSelect = ""
 function onBarMouseDown(e) {
     if (props.fixed) return
+    e.preventDefault() // 없으면 드래그하면서 마우스가 지나가는 양쪽 패널의 텍스트가 계속 선택된다
     dragging.value = true
     userAdjusted.value = true
     prevClient = isVertical.value ? e.clientX : e.clientY
+    prevBodyUserSelect = document.body.style.userSelect
+    document.body.style.userSelect = "none"
     rootEl.value.querySelectorAll("iframe").forEach((f) => (f.style.pointerEvents = "none"))
     document.addEventListener("mousemove", onMouseMove)
     document.addEventListener("mouseup", onMouseUp)
@@ -131,6 +135,7 @@ function onMouseUp() {
     dragging.value = false
     document.removeEventListener("mousemove", onMouseMove)
     document.removeEventListener("mouseup", onMouseUp)
+    document.body.style.userSelect = prevBodyUserSelect
     rootEl.value.querySelectorAll("iframe").forEach((f) => (f.style.pointerEvents = "auto"))
     emit("resize", splitPx.value)
 }

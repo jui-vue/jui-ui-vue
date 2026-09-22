@@ -183,14 +183,17 @@ function setOpacity(e) {
 }
 
 function onColorMouseDown(e) {
+    e.preventDefault()
     dragging.value = "color"
     setMainColor(e)
 }
 function onHueContainerMouseDown(e) {
+    e.preventDefault()
     dragging.value = "hue"
     setHueColor(e)
 }
 function onOpacityContainerMouseDown(e) {
+    e.preventDefault()
     dragging.value = "opacity"
     setOpacity(e)
 }

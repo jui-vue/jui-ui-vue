@@ -78,8 +78,10 @@ function onFocus() {
 
 function onHeadMouseDown(e) {
     if (!canMove.value) return
+    e.preventDefault() // 없으면 드래그하면서 마우스가 지나가는 아래 콘텐츠의 텍스트가 계속 선택된다
     const rect = rootEl.value.getBoundingClientRect()
     move_.value = { check: true, disX: e.pageX - (rect.left + window.scrollX), disY: e.pageY - (rect.top + window.scrollY) }
+    document.body.style.userSelect = "none"
 }
 
 function onResizeMouseDown(e) {
@@ -93,6 +95,7 @@ function onResizeMouseDown(e) {
         disHeight: rect.height
     }
     e.preventDefault()
+    document.body.style.userSelect = "none"
 }
 
 function onDocMouseMove(e) {
@@ -109,6 +112,7 @@ function onDocMouseMove(e) {
 function onDocMouseUp(e) {
     if (move_.value.check) emit("move", e)
     if (resize_.value.check) emit("resize", e)
+    if (move_.value.check || resize_.value.check) document.body.style.userSelect = ""
     move_.value.check = false
     resize_.value.check = false
 }
