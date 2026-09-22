@@ -75,11 +75,14 @@ describe("Slider", () => {
         expect(wrapper.vm.getFromValue()).toBe(3)
     })
 
-    it("vertical orientation uses `bottom` instead of `left` for handle positioning", async () => {
+    it("vertical orientation uses `top` instead of `left` for handle positioning", async () => {
+        // 원본(production) 실측 결과: 세로 슬라이더는 top 기준(값이 클수록 아래로 내려감)이고
+        // margin-top 보정도 없다 - bottom 기준으로 뒀던 이전 구현은 위치가 실제와 달랐고
+        // (드래그 방향도 마우스와 반대로 계산돼 있었다) 이번에 함께 바로잡았다.
         const wrapper = mount(Slider, { props: { orient: "vertical", min: 100, max: 1000, from: 550, step: 10 } })
         await wrapper.vm.$nextTick()
         const style = wrapper.find(".handle.from").element.style
-        expect(style.bottom).not.toBe("")
+        expect(style.top).not.toBe("")
         expect(style.left).toBe("")
     })
 

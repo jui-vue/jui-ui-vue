@@ -115,8 +115,8 @@ function positionTooltip(type, dist) {
 
     if (isVertical.value) {
         styleRef.value = {
-            bottom: trackEl.value.offsetHeight * (dist / 100) + "px",
-            marginBottom: -(tooltipEl.offsetHeight / 2) + "px"
+            top: trackEl.value.offsetHeight * (dist / 100) + "px",
+            marginTop: -(tooltipEl.offsetHeight / 2) + "px"
         }
         classRef.value = {}
     } else {
@@ -149,9 +149,9 @@ function setHandlePosition(e, type) {
         const min = rect.top
         const max = min + rect.height
         const current = e.clientY
-        if (current <= min) dist = 100
-        else if (current >= max) dist = 0
-        else dist = ((max - current) / (max - min)) * 100
+        if (current <= min) dist = 0
+        else if (current >= max) dist = 100
+        else dist = ((current - min) / (max - min)) * 100
     } else {
         const min = rect.left
         const max = min + rect.width
@@ -218,14 +218,16 @@ watch([() => props.min, () => props.max, () => props.step, () => props.type], ()
 
 const progressStyle = computed(() => {
     if (!isDouble.value) {
-        return isVertical.value ? { height: fromDist.value + "%", bottom: "0" } : { width: fromDist.value + "%" }
+        // height를 명시해야 한다 - 안 그러면 .track .progress의 공용 height:100% 기본값이
+        // 인라인 top과 함께 남아 있어서(over-constrained일 때 height가 이긴다) 트랙 밖으로 넘친다.
+        return isVertical.value ? { top: fromDist.value + "%", height: 100 - fromDist.value + "%" } : { width: fromDist.value + "%" }
     }
     return isVertical.value
-        ? { height: toDist.value - fromDist.value + "%", bottom: fromDist.value + "%" }
+        ? { top: fromDist.value + "%", height: toDist.value - fromDist.value + "%" }
         : { width: toDist.value - fromDist.value + "%", left: fromDist.value + "%" }
 })
-const fromHandleStyle = computed(() => (isVertical.value ? { bottom: fromDist.value + "%" } : { left: fromDist.value + "%" }))
-const toHandleStyle = computed(() => (isVertical.value ? { bottom: toDist.value + "%" } : { left: toDist.value + "%" }))
+const fromHandleStyle = computed(() => (isVertical.value ? { top: fromDist.value + "%" } : { left: fromDist.value + "%" }))
+const toHandleStyle = computed(() => (isVertical.value ? { top: toDist.value + "%" } : { left: toDist.value + "%" }))
 
 defineExpose({ setFromValue, setToValue, getFromValue, getToValue })
 </script>

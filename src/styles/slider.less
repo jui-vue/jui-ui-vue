@@ -57,8 +57,9 @@
             width: 6px;
 
             .handle {
-                bottom: 50%;
-                margin-bottom: -7px;
+                // 원본은 가로축(margin-left)만 핸들을 중앙 정렬하고 세로축은 top 마크에서
+                // 그대로 아래로 그린다(margin-top 보정 없음) - 실측으로 확인된 그대로 둔다.
+                top: 50%;
                 left: 50%;
                 margin-left: -7px;
             }
@@ -67,8 +68,7 @@
                 position: absolute;
                 left: 0px;
                 right: 0px;
-                height: 50%;
-                bottom: 0px;
+                top: 0px;
             }
 
         }
