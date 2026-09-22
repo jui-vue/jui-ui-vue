@@ -246,6 +246,12 @@ const openDateItem = computed(() => (openDatePopup.value !== null ? localItems[o
 // ---- color / colors popup ----
 const openColorPopup = ref(null) // "index" 또는 "index:subIndex"(colors 타입)
 function toggleColor(key, e) {
+    if (openColorPopup.value !== null && openColorPopup.value !== key) {
+        // 원본: 이미 열린 colorpicker가 있으면(j.next('.colorpicker')) 위치는 그대로 두고
+        // setColor()로 편집 대상 색상만 바꾼다 - 새로 만들거나 재배치하지 않는다.
+        openColorPopup.value = key
+        return
+    }
     const next = openColorPopup.value === key ? null : key
     openColorPopup.value = next
     if (next !== null) positionPopupAt(e.currentTarget.closest("a.color-input"), colorpickerEl, 50)
