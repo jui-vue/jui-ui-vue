@@ -36,10 +36,6 @@ function loadItems(newItems) {
         localItems.length,
         ...(newItems || []).map((it) => {
             const item = { ...it }
-            // 원본: renderer.date는 초기 표시 텍스트를 $valueText.html(datepicker.getDate())로
-            // 채운다 — item.value가 없으면(날짜를 아직 안 골랐으면) datepicker 컴포넌트의 기본값인
-            // "오늘"이 Date 객체 그대로(toString()) 표시된다(선택 후에는 포맷된 문자열로 바뀜).
-            if (item.type === "date" && !item.value) item.value = String(new Date())
             return item
         })
     )
@@ -332,12 +328,13 @@ defineExpose({
                                 <i :class="item.value === true || item.value === 'true' ? 'icon-checkbox' : 'icon-checkbox2'"></i>
                             </span>
 
-                            <div v-else-if="item.type === 'switch'" class="switch inner small">
-                                <Switch
-                                    :model-value="item.value === true || item.value === 'true'"
-                                    @update:model-value="(v) => refreshValue(index, v)"
-                                />
-                            </div>
+                            <Switch
+                                v-else-if="item.type === 'switch'"
+                                size="small"
+                                inner
+                                :model-value="item.value === true || item.value === 'true'"
+                                @update:model-value="(v) => refreshValue(index, v)"
+                            />
 
                             <div v-else-if="item.type === 'date'" class="datepicker-input" style="position: relative;">
                                 <i class="icon-calendar" @click="toggleDate(index)"></i>
