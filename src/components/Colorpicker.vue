@@ -90,7 +90,7 @@ function calculateColor() {
 function getColor(type) {
     const rgb = calculateColor()
     if (type) {
-        if (type === "hex" && rgb.a < 1) type = "rgb"
+        // hex는 8자리(#RRGGBBAA)로 알파까지 표현하므로(formatColor 참고) rgb()로 바꿔 쓸 필요가 없다.
         return formatColor(rgb, type)
     }
     return rgb
@@ -122,7 +122,7 @@ function setInputColor(evtType) {
     controlColorBg.value = formatColor(rgb, "hex")
     opacityText.value = Math.floor(rgb.a * 100) + "%"
 
-    const out = rgb.a < 1 ? formatColor(rgb, "rgb") : formatColor(rgb, "hex")
+    const out = formatColor(rgb, "hex")
     emit("update:modelValue", out)
     emit("change", out, rgb)
 }
