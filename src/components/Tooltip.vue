@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, watch, nextTick } from "vue"
+import { ref, computed, watch, nextTick, useSlots } from "vue"
 
 // 원본(tooltip.js)은 body에 절대좌표(getBoundingClientRect 기반)로 툴팁을 붙였다.
 // Vue 버전은 트리거를 감싸는 wrapper를 position:relative로 두고 CSS만으로 4방향에 붙인다
@@ -42,6 +42,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(["show", "hide"])
+const slots = useSlots()
 
 // 원본 update(newTitle)로 프로그래매틱하게 바꿀 수 있어서(ButtonGroup/AutoComplete와 동일한 이유로)
 // text는 prop을 초기값으로 삼는 내부 상태로 관리한다.
@@ -150,7 +151,11 @@ defineExpose({ update })
                 }[position])
             }"
         >
-            <div class="anchor"></div>
+            <!-- #tooltip 슬롯(popover 등 커스텀 콘텐츠)을 쓸 때는 이 기본 anchor(검은 화살표,
+                 tooltipBackgroundColor로 칠해짐)를 렌더링하지 않는다 - 커스텀 콘텐츠가 자기
+                 화살표를 따로 갖고 있으면(popover의 ::before/::after) 그 위에 검은 삼각형이
+                 하나 더 겹쳐 보이는 버그였다. -->
+            <div v-if="!slots.tooltip" class="anchor"></div>
             <slot name="tooltip">
                 <div class="message" :style="{ backgroundColor: color || undefined }">{{ internalText }}</div>
             </slot>

@@ -135,5 +135,17 @@ describe("Tooltip", () => {
 
         expect(wrapper.find(".popover-body").exists()).toBe(true)
         expect(wrapper.find(".message").exists()).toBe(false)
+        // 커스텀 콘텐츠는 보통 자기 화살표를 따로 갖는다(popover의 ::before/::after) - 기본
+        // anchor(검은 삼각형)까지 같이 나오면 두 개가 겹쳐 보인다.
+        expect(wrapper.find(".anchor").exists()).toBe(false)
+    })
+
+    it("renders the default anchor when no #tooltip slot is given", async () => {
+        const wrapper = mount(Tooltip, { props: { text: "hi" } })
+        await wrapper.trigger("mouseover")
+        vi.runAllTimers()
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.find(".anchor").exists()).toBe(true)
     })
 })
