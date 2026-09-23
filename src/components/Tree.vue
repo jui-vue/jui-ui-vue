@@ -257,8 +257,16 @@ function getRoot() {
 }
 
 // ---- 드래그 앤 드롭 ----
-// 원본은 형제 사이에 삽입하기 위한 반투명 .drag 바까지 그렸지만, 여기서는 핵심 동작인
-// "드래그한 노드를 대상 노드의 마지막 자식으로 옮기기"만 지원한다(문서화된 단순화).
+// 원본(ui.js)은 두 가지 독립된 드롭 경로를 갖는다:
+//   1) 노드 위에 직접 드롭 -> 그 노드의 마지막 자식으로 편입 (dragChild !== false일 때만)
+//   2) 각 노드 위/마지막 자식 뒤에 깔아둔 반투명 .drag 바 위에 드롭 -> 형제 사이 특정
+//      위치로 재배치 (dragChild 값과 무관하게 항상 동작)
+// 예전엔 1)만 "문서화된 단순화"로 구현했지만, 그 결과 dragChild: false로 쓰는 예제
+// (tree_3 등 - 원본에서는 "노드 위 직접 드롭"만 막고 형제 재배치는 여전히 되는 옵션)가
+// 로컬에서는 드래그해도 아무 동작도 하지 않는 버그가 됐다. 원본처럼 별도 .drag 바 DOM을
+// 절대좌표로 그리는 대신, 이미 존재하는 노드 자신의 mouseover 이벤트에서 커서가 그 행의
+// 위쪽 절반인지 아래쪽 절반인지로 "이 노드 앞" / "이 노드가 마지막 자식이면 그 뒤"를
+// 판정한다 - DOM 측정 patch 없이 같은 결과(형제 재배치, dragChild 무관)를 낸다.
 //
 // 원본은 jQuery 커스텀 이벤트라 리스너가 false를 리턴하면 그 자리에서 동작을 취소할 수
 // 있었다(tree_drag.html 예제가 실제로 dragover/dragend에서 file 노드 위로는 못 옮기게
@@ -266,6 +274,7 @@ function getRoot() {
 // control 객체(preventDefault)를 세 번째 인자로 함께 넘기고 그 결과를 직접 확인한다.
 const dragStart = ref(null) // 드래그 시작 노드의 index
 const dragEnd = ref(undefined) // 현재 hover 중인 대상 노드의 index (activeIndex와 동일한 이유로 undefined가 '없음')
+const dragBarRef = ref({ index: null, after: false, nest: false }) // dragChild===false 모드에서 형제 재배치(index 앞/뒤) 또는 자식 편입(nest) 대상 - root 제외 모든 노드가 대상
 
 function emitCancelable(name, node, nativeEvent) {
     const control = {
@@ -289,6 +298,11 @@ function dragOverNode(node, e) {
     if (!emitCancelable("dragover", node, e)) return
     dragEnd.value = node.index
 }
+function lastChildSlotIndex(node) {
+    const lastChild = node.children.at(-1)
+    return lastChild ? keyParser.getNextIndex(lastChild.index) : node.index + ".0"
+}
+
 function dragDropOnNode(node, e) {
     if (dragStart.value == null) {
         dragStart.value = null
@@ -297,20 +311,61 @@ function dragDropOnNode(node, e) {
     }
     if (props.dragChild !== false && dragStart.value !== node.index) {
         const target = getNode(node.index)
-        const lastChild = target && target.children.at(-1)
-        const endIndex = lastChild ? keyParser.getNextIndex(lastChild.index) : node.index + ".0"
-
         if (emitCancelable("dragend", get(node.index), e)) {
-            move(dragStart.value, endIndex)
+            move(dragStart.value, lastChildSlotIndex(target))
         }
     }
     dragStart.value = null
     dragEnd.value = undefined
 }
 
+function dragBarOverNode(node, e) {
+    if (props.dragChild !== false) return // 1)번 경로가 열려 있으면 형제 재배치는 관여하지 않는다
+    if (dragStart.value == null || dragStart.value === node.index) return
+    if (node.parent == null) return // 원본도 root는 재배치 대상에서 제외
+
+    // 아이콘/제목을 담은 행(row)만의 높이를 써야 한다 - li 전체엔 열린 자식 <ul>까지
+    // 포함돼 있어서 그 높이를 쓰면 자식이 있는 노드에서 판정이 어긋난다.
+    const row = e.currentTarget.children[1]
+    const isLastChild = node.parent.children.at(-1) === node
+    let after = false
+    let nest = false
+
+    if (row) {
+        const rect = row.getBoundingClientRect()
+        const ratio = rect.height > 0 ? (e.clientY - rect.top) / rect.height : e.clientY > 0 ? 1 : 0
+
+        // root를 제외한 모든 노드는 리프/폴더 구분 없이 자유롭게 이동 대상이 된다 - 행
+        // 가운데(50%)에 놓으면 그 노드의 자식으로 편입(이미 자식이 있는 폴더든, 자식이
+        // 없어져서 리프가 된 노드든 동일하게 다시 폴더가 됨), 위/아래 가장자리는 형제
+        // 재배치. 자기 자신/자손으로의 이동은 move()가 알아서 무시한다.
+        if (ratio > 0.25 && ratio < 0.75) {
+            nest = true
+        } else {
+            after = isLastChild && ratio >= 0.75
+        }
+    }
+
+    dragBarRef.value = { index: node.index, after, nest }
+}
+function dragBarDrop() {
+    if (props.dragChild !== false) return
+    const { index, after, nest } = dragBarRef.value
+    if (dragStart.value != null && index != null && index !== dragStart.value) {
+        if (nest) {
+            move(dragStart.value, lastChildSlotIndex(getNode(index)))
+        } else {
+            move(dragStart.value, after ? keyParser.getNextIndex(index) : index)
+        }
+    }
+    dragStart.value = null
+    dragBarRef.value = { index: null, after: false, nest: false }
+}
+
 provide("treeCtx", {
     activeIndex,
     dragEnd,
+    dragBarRef,
     drag: props.drag,
     rootHide: props.rootHide,
     open,
@@ -318,7 +373,8 @@ provide("treeCtx", {
     select,
     dragStartNode,
     dragOverNode,
-    dragDropOnNode
+    dragDropOnNode,
+    dragBarOverNode
 })
 
 defineExpose({
@@ -345,7 +401,7 @@ defineExpose({
 </script>
 
 <template>
-    <ul class="tree" :class="variant">
+    <ul class="tree" :class="variant" @mouseup.capture="dragBarDrop">
         <TreeNode :node="root" is-root>
             <template #default="slotProps"><slot v-bind="slotProps" /></template>
         </TreeNode>

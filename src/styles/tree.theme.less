@@ -18,6 +18,23 @@ ul.tree {
         background: @treeHoverBackgroundColor;
       }
     }
+
+    &.drag-before {
+      > a, > span, > div {
+        box-shadow: 0 -2px 0 0 @treeDragOnBackgroundColor;
+      }
+    }
+    &.drag-after {
+      > a, > span, > div {
+        box-shadow: 0 2px 0 0 @treeDragOnBackgroundColor;
+      }
+    }
+    &.drag-nest {
+      > a, > span, > div {
+        background: @treeDragOnBackgroundColor;
+        border-radius: 3px;
+      }
+    }
   }
 
   .drag.on {

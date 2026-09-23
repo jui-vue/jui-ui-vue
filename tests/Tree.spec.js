@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest"
+import { describe, it, expect, vi } from "vitest"
 import { mount } from "@vue/test-utils"
 import Tree from "../src/components/Tree.vue"
 
@@ -126,6 +126,143 @@ describe("Tree", () => {
 
         expect(wrapper.vm.get("0").data.title).toBe("b")
         expect(wrapper.vm.get("0").children[0].data.title).toBe("a")
+        wrapper.unmount()
+    })
+
+    it("drag=true, dragChild=false: dropping directly onto a node does nothing (matches original ui.js)", async () => {
+        const wrapper = mount(Tree, {
+            props: { root: { title: "root" }, drag: true, dragChild: false },
+            attachTo: document.body
+        })
+        wrapper.vm.append({ title: "a" })
+        wrapper.vm.append({ title: "b" })
+        await wrapper.vm.$nextTick()
+
+        const items = wrapper.findAll("li:not(.root)")
+        await items[0].trigger("mousedown") // a 드래그 시작
+        await items[1].trigger("mouseup") // b 위에 드롭(자식으로 편입 시도)
+
+        expect(wrapper.vm.list()[0].data.title).toBe("a")
+        expect(wrapper.vm.list()[1].data.title).toBe("b")
+        expect(wrapper.vm.get("0").children).toHaveLength(0)
+        wrapper.unmount()
+    })
+
+    it("drag=true, dragChild=false: dropping on a node's top half reorders it as a preceding sibling", async () => {
+        const wrapper = mount(Tree, {
+            props: { root: { title: "root" }, drag: true, dragChild: false },
+            attachTo: document.body
+        })
+        wrapper.vm.append({ title: "a" })
+        wrapper.vm.append({ title: "b" })
+        wrapper.vm.append({ title: "c" })
+        await wrapper.vm.$nextTick()
+
+        const items = wrapper.findAll("li:not(.root)")
+        await items[2].trigger("mousedown") // c 드래그 시작
+        // b 행의 위쪽 절반에서 mousemove -> "b 앞"으로 재배치 판정
+        await items[1].trigger("mousemove", { clientY: 0 })
+        await items[1].trigger("mouseup")
+
+        expect(wrapper.vm.list().map((n) => n.data.title)).toEqual(["a", "c", "b"])
+        wrapper.unmount()
+    })
+
+    it("drag=true, dragChild=false: dropping on the last sibling's bottom half appends it after that sibling", async () => {
+        const wrapper = mount(Tree, {
+            props: { root: { title: "root" }, drag: true, dragChild: false },
+            attachTo: document.body
+        })
+        wrapper.vm.append({ title: "a" })
+        wrapper.vm.append({ title: "b" })
+        wrapper.vm.append({ title: "c" })
+        await wrapper.vm.$nextTick()
+
+        const items = wrapper.findAll("li:not(.root)")
+        await items[0].trigger("mousedown") // a 드래그 시작
+        // c(마지막 형제) 행의 아래쪽 절반에서 mousemove -> "c 뒤"로 재배치 판정
+        await items[2].trigger("mousemove", { clientY: 1000 })
+        await items[2].trigger("mouseup")
+
+        expect(wrapper.vm.list().map((n) => n.data.title)).toEqual(["b", "c", "a"])
+        wrapper.unmount()
+    })
+
+    it("drag=true, dragChild=false: dropping on a leaf node's middle nests it as that node's child (leaf -> folder)", async () => {
+        const wrapper = mount(Tree, {
+            props: { root: { title: "root" }, drag: true, dragChild: false },
+            attachTo: document.body
+        })
+        wrapper.vm.append({ title: "a" }) // 원래 자식이 있었다가 지금은 빈 리프가 된 노드 역할
+        wrapper.vm.append({ title: "b" })
+        await wrapper.vm.$nextTick()
+
+        const rectSpy = vi
+            .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+            .mockReturnValue({ top: 0, height: 30 })
+
+        const items = wrapper.findAll("li:not(.root)")
+        await items[1].trigger("mousedown") // b 드래그 시작
+        // a(리프)의 가운데(15/30)에서 mousemove -> "a의 자식으로 편입"(폴더화) 판정
+        await items[0].trigger("mousemove", { clientY: 15 })
+        await items[0].trigger("mouseup")
+
+        expect(wrapper.vm.list()).toHaveLength(1)
+        expect(wrapper.vm.get("0").data.title).toBe("a")
+        expect(wrapper.vm.get("0").children).toHaveLength(1)
+        expect(wrapper.vm.get("0").children[0].data.title).toBe("b")
+
+        rectSpy.mockRestore()
+        wrapper.unmount()
+    })
+
+    it("drag=true, dragChild=false: dropping on an existing folder's middle also nests it as a new child (root 제외 자유 이동)", async () => {
+        const wrapper = mount(Tree, {
+            props: { root: { title: "root" }, drag: true, dragChild: false },
+            attachTo: document.body
+        })
+        wrapper.vm.append({ title: "a" })
+        wrapper.vm.append("0", { title: "a-child" }) // a는 이미 자식이 있는 폴더
+        wrapper.vm.append({ title: "b" })
+        await wrapper.vm.$nextTick()
+
+        const rectSpy = vi
+            .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+            .mockReturnValue({ top: 0, height: 30 })
+
+        const items = wrapper.findAll("li:not(.root)")
+        await items[items.length - 1].trigger("mousedown") // b 드래그 시작
+        await items[0].trigger("mousemove", { clientY: 15 }) // a(폴더)의 가운데
+        await items[0].trigger("mouseup")
+
+        const aNode = wrapper.vm.listAll().find((n) => n.data.title === "a")
+        expect(aNode.children.map((n) => n.data.title)).toEqual(["a-child", "b"])
+
+        rectSpy.mockRestore()
+        wrapper.unmount()
+    })
+
+    it("drag=true, dragChild=false: a folder cannot be dropped onto its own descendant", async () => {
+        const wrapper = mount(Tree, {
+            props: { root: { title: "root" }, drag: true, dragChild: false },
+            attachTo: document.body
+        })
+        wrapper.vm.append({ title: "a" })
+        wrapper.vm.append("0", { title: "a-child" })
+        await wrapper.vm.$nextTick()
+
+        const rectSpy = vi
+            .spyOn(HTMLElement.prototype, "getBoundingClientRect")
+            .mockReturnValue({ top: 0, height: 30 })
+
+        const items = wrapper.findAll("li:not(.root)")
+        await items[0].trigger("mousedown") // a(부모) 드래그 시작
+        await items[1].trigger("mousemove", { clientY: 15 }) // a-child(자기 자손)의 가운데
+        await items[1].trigger("mouseup")
+
+        expect(wrapper.vm.list().map((n) => n.data.title)).toEqual(["a"]) // 무시됨, 트리 구조 그대로
+
+        rectSpy.mockRestore()
         wrapper.unmount()
     })
 
