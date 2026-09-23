@@ -12,3 +12,4 @@ node_modules/
 
 # Vue package build output
 dist/
+dist-playground/

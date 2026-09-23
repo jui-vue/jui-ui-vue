@@ -8,7 +8,7 @@ export default [
     },
     {
         name: "app/files-to-ignore",
-        ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**"]
+        ignores: ["**/dist/**", "**/dist-playground/**", "**/node_modules/**", "**/coverage/**"]
     },
     {
         languageOptions: {
