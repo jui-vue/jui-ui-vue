@@ -52,6 +52,10 @@
 	overflow: auto;
 	padding: 15px;
 	word-break: break-all;
+	box-sizing: border-box; // Window.vue의 bodyStyle은 "창 전체 높이 - 헤더 - 풋(또는 여백)"만
+	// 계산해서 그 값을 그대로 height로 넣는다(원본 window.js와 같은 산식). content-box(기본값)면
+	// 이 padding(위아래 30px)이 그 위에 더 얹혀서 body가 창 바닥 아래로 삐져나간다 - 창의
+	// 아래쪽 테두리/그림자가 안 보이는 것처럼 보이는 원인이었다.
 
 	&.has-property {
 		padding:0px;
