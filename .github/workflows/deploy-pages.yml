@@ -31,6 +31,23 @@ jobs:
           repository: juijs-vue/jui-core-ts
           path: jui-core-ts
 
+      - uses: actions/checkout@v4
+        with:
+          repository: juijs-vue/jui-grid-vue
+          path: jui-grid-vue
+
+      # This slot now serves www.jui-vue.io's site (shell + play/ui) instead of
+      # jui-ui-vue's own component playground - checked out here as a sibling
+      # the same way jui-grid-vue/jui-core-ts already are, since its web/
+      # project depends on this repo's own dist/ via a "file:" link.
+      # TODO: point at www.jui-vue.io's default branch once the Vue3 port
+      # (currently developed on its `vue3` branch) is finished and merged.
+      - uses: actions/checkout@v4
+        with:
+          repository: juijs-vue/www.jui-vue.io
+          ref: vue3
+          path: www.jui-vue.io
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
@@ -38,6 +55,8 @@ jobs:
           cache-dependency-path: |
             jui-ui-vue/package-lock.json
             jui-core-ts/package-lock.json
+            jui-grid-vue/package-lock.json
+            www.jui-vue.io/web/package-lock.json
 
       - name: Build jui-core-ts (local dependency)
         working-directory: jui-core-ts
@@ -45,17 +64,27 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install jui-ui-vue
+      - name: Build jui-ui-vue (library)
         working-directory: jui-ui-vue
-        run: npm ci
+        run: |
+          npm ci
+          npm run build
 
-      - name: Build demo site
-        working-directory: jui-ui-vue
-        run: npm run build:pages
+      - name: Build jui-grid-vue (library, depends on jui-ui-vue)
+        working-directory: jui-grid-vue
+        run: |
+          npm ci
+          npm run build:lib
+
+      - name: Build www.jui-vue.io's site
+        working-directory: www.jui-vue.io/web
+        run: |
+          npm ci
+          npm run build
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: jui-ui-vue/dist-playground
+          path: www.jui-vue.io/web/dist
 
   deploy:
     needs: build
