@@ -59,18 +59,18 @@
         padding-right: 0;
 
         .handle {
-            margin-top: -(@switchInnerWidth/2) + @switchInnerPadding/4;
-            left: @switchInnerPadding/2;
+            margin-top: -(@switchInnerWidth/2) + (@switchInnerPadding/4);
+            left: (@switchInnerPadding/2);
             margin-left: 0px;
-            width: @switchInnerWidth - @switchInnerPadding/2;
-            height: @switchInnerHeight - @switchInnerPadding/2;
+            width: @switchInnerWidth - (@switchInnerPadding/2);
+            height: @switchInnerHeight - (@switchInnerPadding/2);
             box-shadow: @switchInnerHandleBoxShadow;
         }
 
         &.on {
             .handle {
                 left: 100%;
-                margin-left: -@switchInnerWidth - @switchInnerPadding/4;
+                margin-left: -@switchInnerWidth - (@switchInnerPadding/4);
                 border: 1px solid @switchOnBackgroundColor;
             }
         }
@@ -120,16 +120,16 @@
         }
 
         .handle {
-            margin-top: -((@switchInnerHeight * @rate)/2) + @switchInnerPadding/4;
-            left: @switchInnerPadding/2;
-            width: @switchInnerWidth * @rate - @switchInnerPadding/2;
-            height: @switchInnerWidth * @rate - @switchInnerPadding/2;
+            margin-top: -((@switchInnerHeight * @rate)/2) + (@switchInnerPadding/4);
+            left: (@switchInnerPadding/2);
+            width: @switchInnerWidth * @rate - (@switchInnerPadding/2);
+            height: @switchInnerWidth * @rate - (@switchInnerPadding/2);
         }
 
         &.on {
             .handle {
                 left: 100%;
-                margin-left: -(@switchInnerWidth * @rate) - @switchInnerPadding/4;
+                margin-left: -(@switchInnerWidth * @rate) - (@switchInnerPadding/4);
             }
         }
     }
