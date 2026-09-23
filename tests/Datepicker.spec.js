@@ -5,7 +5,9 @@ import Datepicker from "../src/components/Datepicker.vue"
 describe("Datepicker", () => {
     it("daily: renders a 7-column grid with S/M/T/W/T/F/S header", () => {
         const wrapper = mount(Datepicker, { props: { modelValue: new Date(2024, 4, 15) } }) // 2024-05-15
-        expect(wrapper.findAll("thead th")).toHaveLength(7)
+        // 원본(jui.js)도 헤더 행을 <thead> 없이 <tbody>의 첫 <tr>로 둔다 - 이 컴포넌트가
+        // 그대로 포팅한 실제 구조라, <thead th> 대신 그냥 <th>로 찾아야 한다.
+        expect(wrapper.findAll("th")).toHaveLength(7)
         expect(wrapper.find(".title").text()).toBe("2024.05")
     })
 

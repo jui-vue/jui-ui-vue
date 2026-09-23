@@ -55,6 +55,11 @@ describe("Notify", () => {
         await wrapper.vm.$nextTick()
 
         expect(wrapper.findAll(".notify")).toHaveLength(0)
+
+        // removeItem()은 배열에서 바로 splice하지만, hide emit 자체는 퇴장 애니메이션이
+        // 끝나는 hideDuration(기본 500ms)만큼 더 늦게 나간다 - 원본(notify.js)이 슬라이드업
+        // 애니메이션 콜백에서 hide를 emit하는 실제 타이밍을 그대로 재현한 것.
+        vi.advanceTimersByTime(500)
         expect(wrapper.emitted("hide")[0]).toEqual([{ title: "T" }])
     })
 
@@ -76,6 +81,9 @@ describe("Notify", () => {
         await wrapper.find(".notify").trigger("click")
 
         expect(wrapper.emitted("select")[0][0]).toEqual({ title: "T" })
+
+        // 클릭도 removeItem()을 타므로 hide emit은 hideDuration(기본 500ms) 뒤에 나간다.
+        vi.advanceTimersByTime(500)
         expect(wrapper.emitted("hide")[0]).toEqual([{ title: "T" }])
         expect(wrapper.findAll(".notify")).toHaveLength(0)
     })

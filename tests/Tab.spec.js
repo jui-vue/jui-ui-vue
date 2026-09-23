@@ -119,7 +119,9 @@ describe("Tab", () => {
         // Home(원래 modelValue=0으로 활성)이 옮겨졌으니 활성 인덱스도 새 위치(2)를 따라간다
         expect(wrapper.emitted("update:modelValue")[0]).toEqual([2])
 
-        await wrapper.find(".jui-tab").trigger("mouseup")
+        // 루트가 Fragment라 감싸는 wrapper div가 없다(주석 참고) - mouseup 핸들러는
+        // 탭 목록 자체인 <ul ref="tabRoot">에 붙어있다.
+        await wrapper.find("ul").trigger("mouseup")
         expect(wrapper.emitted("dragend")[0]).toEqual([2, expect.anything()])
     })
 
@@ -219,6 +221,9 @@ describe("Tab", () => {
 
         await wrapper.findAll(".dropdown li")[1].trigger("click")
         expect(wrapper.emitted("changemenu")[0][0]).toMatchObject({ value: "c2", text: "Combo Box2" })
-        expect(wrapper.find(".dropdown").exists()).toBe(false)
+        // Dropdown.vue는 v-if로 떼어내는 게 아니라 display:none으로 숨긴다(원본처럼 매번
+        // 없앴다 새로 만들지 않고 show/hide만 토글) - 그래서 .dropdown은 계속 "존재"하고,
+        // 닫혔는지는 보이는지(isVisible)로 확인해야 한다.
+        expect(wrapper.find(".dropdown").isVisible()).toBe(false)
     })
 })
